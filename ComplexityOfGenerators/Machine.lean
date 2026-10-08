@@ -106,7 +106,8 @@ def initialConfiguration : Configuration M where
 
 /-- Observe terminal configurations without an additional transition. In particular,
 after consuming `t` bits in `t` transitions, exhaustion can be detected at time `t`.
-This convention lets the length-`p(n)` trial of Remark 1 use the same time budget. -/
+Setup and simulation transitions are accounted for separately from seed length
+by the two budgets in `GeneratorTimeBound`. -/
 def observe (data : InputData I A) (bits : BitString) (c : Configuration M) : RunState M :=
   match M.transition c.state (data.input[c.inputHead]?)
       (data.auxiliary[c.auxiliaryHead]?)

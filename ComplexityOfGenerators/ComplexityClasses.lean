@@ -6,12 +6,12 @@ import ComplexityOfGenerators.Generators
 `PolynomialBound` uses `c * (n + 1)^k`. These bounds are cofinal among polynomial
 upper bounds, absorb multiplicative constants, and make sense at size zero.
 
-For generators, `RunsInTime` follows **Remark 1**: a finite, time-budget-sized
-random tape is enough to test whether a slice is empty. Every such trial accepts
-when the slice is nonempty, and rejects by exhaustion when it is empty. Shorter
-tapes also halt within the budget. This avoids demanding that an empty generator
-consume an arbitrarily long tape within a bound independent of tape length.
-Decision machines use the ordinary worst-case `Machine.TimeBound` instead.
+For generators, `RunsInTime` follows **Remark 1** with separate random-tape and
+execution budgets. A full trial accepts exactly when the slice is nonempty,
+and otherwise rejects by exhaustion. Both budgets are uniform polynomials in
+`PolynomialTime`. Keeping them separate permits setup and simulation overhead
+without supplying extra random bits that must also be consumed. Decision
+machines use the ordinary worst-case `Machine.TimeBound` instead.
 -/
 
 namespace ComplexityOfGenerators
@@ -26,18 +26,21 @@ def PolynomialBound.eval (p : PolynomialBound) (n : ℕ) : ℕ :=
 
 instance : CoeFun PolynomialBound (fun _ => ℕ → ℕ) := ⟨PolynomialBound.eval⟩
 
-/-- The same Remark 1 convention for a generator with fixed external inputs. -/
+/-- Remark 1 trials with distinct seed and primitive-transition budgets. -/
 def Machine.GeneratorTimeBound {I A O : Type} (M : Machine I A O)
-    (data : InputData I A) (t : ℕ) : Prop :=
-  (∀ b, b.length ≤ t → M.HaltsWithin data b t) ∧
-  (∀ b, b.length = t → (M.Accepts data b ↔ (M.generatedLanguage data).Nonempty))
+    (data : InputData I A) (seedBudget timeBudget : ℕ) : Prop :=
+  (∀ b, b.length ≤ seedBudget → M.HaltsWithin data b timeBudget) ∧
+  (∀ b, b.length = seedBudget → (M.Accepts data b ↔ (M.generatedLanguage data).Nonempty))
+
+/-- Short name used in the trial-budget lemmas. -/
+abbrev Machine.TrialBound {I A O : Type} (M : Machine I A O) := M.GeneratorTimeBound
 
 /-- The emptiness test asserted in Remark 1, proved from the budget convention
 and the operational distinction between explicit rejection and exhaustion. -/
 theorem bounded_trial_exhausted_iff_empty {I A O : Type} (M : Machine I A O)
-    (data : InputData I A) (t : ℕ) (b : BitString)
-    (generator : M.IsGenerator data) (bound : M.GeneratorTimeBound data t)
-    (length : b.length = t) :
+    (data : InputData I A) (seed t : ℕ) (b : BitString)
+    (generator : M.IsGenerator data) (bound : M.GeneratorTimeBound data seed t)
+    (length : b.length = seed) :
     M.run data b t = .halted .exhausted ↔ M.generatedLanguage data = ∅ := by
   constructor
   · intro exhausted
@@ -65,12 +68,13 @@ variable {α : Type} [Fintype α]
 
 /-- Definition 4.3 with the empty-slice convention of Remark 1.
 This also explicitly rules out accepting only a proper subset of full-budget seeds. -/
-def RunsInTime (G : UniformGenerators α) (t : ℕ → ℕ) : Prop :=
-  ∀ n, G.machine.GeneratorTimeBound (generatorData n) (t n)
+def RunsInTime (G : UniformGenerators α) (seed time : ℕ → ℕ) : Prop :=
+  ∀ n, G.machine.GeneratorTimeBound (generatorData n) (seed n) (time n)
 
-/-- Definition 5.1: a single polynomial bounds the whole uniform family. -/
+/-- Definition 5.1 with the approved Remark 1 interpretation: uniform polynomial
+seed and execution budgets for the whole family. -/
 def PolynomialTime (G : UniformGenerators α) : Prop :=
-  ∃ p : PolynomialBound, G.RunsInTime p
+  ∃ seed time : PolynomialBound, G.RunsInTime seed time
 
 /-- Definition 4.4: work space only; output and random tapes are not counted. -/
 def RunsInSpace (G : UniformGenerators α) (s : ℕ → ℕ) : Prop :=
@@ -117,7 +121,8 @@ def PSPACE : LanguageClass α :=
 /-- Definition 4.3: exact-length, uniform, time-bounded generation. -/
 def GTIME (t : ℕ → ℕ) : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
-      G.toUniformGenerators.language = L ∧ G.toUniformGenerators.RunsInTime t }
+      G.toUniformGenerators.language = L ∧
+      ∃ seed : ℕ → ℕ, (∀ n, 0 < seed n) ∧ G.toUniformGenerators.RunsInTime seed t }
 
 /-- Definition 4.4: exact-length, uniform, space-bounded generation. -/
 def GSPACE (s : ℕ → ℕ) : LanguageClass α :=

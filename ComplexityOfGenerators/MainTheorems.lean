@@ -1,5 +1,11 @@
 import ComplexityOfGenerators.Cryptography
 import ComplexityOfGenerators.Certificates
+import ComplexityOfGenerators.Proofs.GenerabilityContainment
+import ComplexityOfGenerators.Proofs.RecognizabilityContainment
+import ComplexityOfGenerators.Proofs.PolynomialGenerationContainment
+import ComplexityOfGenerators.Proofs.BinaryCollisionFinder
+import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
+import ComplexityOfGenerators.Foundations.LanguageClosure
 
 /-!
 # Every result marked “Theorem” in the supplied paper
@@ -8,10 +14,15 @@ Source: `complexity-of-generators-formalisation.pdf`, *Complexity Theory of
 Randomised Testing*. There are five numbered theorems. Each docstring below
 quotes its mathematical statement and identifies its printed page number.
 
-This is the **statement formalisation** stage: the five `sorry` bodies are
-explicit proof obligations, not completed proofs. There are no custom axioms
+Theorems 3.1 and 5.1 are proved in the retained finite-control machine model. The three
+remaining `sorry` bodies are explicit proof obligations. Verified components
+of the complexity proofs are in `Simulation` and `Proofs`; their presence does
+not establish the remaining main theorems. There are no custom axioms
 asserting supporting complexity-theoretic results. In particular, Theorem 7.1
-retains the literal certificate definitions and their documented boundary issue.
+uses the user-approved corrections to the certificate definitions: certified
+instances may be empty words, and every sampled certificate must certify an
+instance of the requested length. The original empty-word exclusion is retained
+separately in `LiteralCertificateCoverage` for its verified counterexample.
 -/
 
 namespace ComplexityOfGenerators
@@ -21,7 +32,9 @@ namespace ComplexityOfGenerators
 alphabet. Neither decidability nor a time/space bound is assumed. -/
 theorem theorem_3_1_generability_is_recursive_enumerability
     (α : Type) [Fintype α] : RE α = GEN α := by
-  sorry
+  apply Set.Subset.antisymm
+  · exact re_subset_gen α
+  · exact gen_subset_re α
 
 /-- **Theorem 5.1 (Cryptographic Separation), p. 0:15.**
 “If collision-resistant hash functions exist, then PG ⊊ NP. In fact, P ⊈ PG.”
@@ -30,7 +43,14 @@ We specialise the word alphabet to binary for these bitstring complexity classes
 theorem theorem_5_1_cryptographic_separation
     (h : CollisionResistantHashFunctionsExist) :
     PG Bool ⊂ NP Bool ∧ ¬ P Bool ⊆ PG Bool := by
-  sorry
+  obtain ⟨hash, secure⟩ := h
+  have collision_decidable := hash.binaryCollisionLanguage_mem_p
+  have not_generable := hash.binaryCollisionLanguage_not_mem_pg secure
+  refine ⟨⟨pg_subset_np, ?_⟩, ?_⟩
+  · intro reverseContainment
+    exact not_generable (reverseContainment (p_subset_np collision_decidable))
+  · intro containment
+    exact not_generable (containment collision_decidable)
 
 /-- **Theorem 6.1, p. 0:22.** “PSPACEG = PSPACE.”
 This theorem is unrelativised, exactly as stated. Oracle equality is Proposition
@@ -43,19 +63,13 @@ theorem theorem_6_1_polynomial_space_generation
 “(1) L is generable in polynomial time (L ∈ PG).
 (2) There exists a polynomial-time verifier V for L, and V has a certificate scheme.”
 The verifier is existentially quantified, rather than fixed in advance.
-There is no extra assumption `L ∈ NP` or `[] ∉ L` in the paper or here. -/
+There is no extra assumption `L ∈ NP` or `[] ∉ L` in the paper or here.
+The user-approved corrections allow empty instances and require every sampled
+certificate to certify an instance of the requested length. -/
 theorem theorem_7_1_generators_are_certificate_schemes
     {α : Type} [Fintype α] (L : Language α) :
     L ∈ PG α ↔ ∃ V : PolynomialVerifier L, HasCertificateScheme V := by
   sorry
-
-/-- Closed under complement relative to the full universe of words. -/
-def ClosedUnderComplement {α : Type} (C : LanguageClass α) : Prop :=
-  ∀ L, L ∈ C → Lᶜ ∈ C
-
-/-- Closed under binary language intersection. -/
-def ClosedUnderIntersection {α : Type} (C : LanguageClass α) : Prop :=
-  ∀ L K, L ∈ C → K ∈ C → L ∩ K ∈ C
 
 /-- **Theorem 7.2 (Efficient Generators are not Composable), p. 0:25.**
 “If NP ≠ coNP, then PG is not closed under complementation. If collision-resistant

@@ -82,6 +82,44 @@ private theorem decodeBits_map (x : BitString) :
       simpa [encodePair, decodePair] using
         congrArg (Option.map (fun p : BitString × BitString => (b :: p.1, p.2))) ih
 
+private theorem decodeBits_sound (word : List PairSymbol) (bits : BitString)
+    (decoded : decodeBits word = some bits) : word = bits.map PairSymbol.bit := by
+  induction word generalizing bits with
+  | nil => simpa [decodeBits] using decoded
+  | cons symbol tail ih =>
+      cases symbol with
+      | separator => simp [decodeBits] at decoded
+      | bit b =>
+          cases rest : decodeBits tail with
+          | none => simp [decodeBits, rest] at decoded
+          | some bs =>
+              have same : b :: bs = bits := by simpa [decodeBits, rest] using decoded
+              subst bits
+              simp [ih bs rest]
+
+/-- The parser rejects missing or additional separators; every successful
+parse is the canonical encoding of the returned pair. -/
+theorem decodePair_sound (word : List PairSymbol) (x y : BitString)
+    (decoded : decodePair word = some (x, y)) : word = encodePair x y := by
+  induction word generalizing x y with
+  | nil => simp [decodePair] at decoded
+  | cons symbol tail ih =>
+      cases symbol with
+      | separator =>
+          cases rest : decodeBits tail with
+          | none => simp [decodePair, rest] at decoded
+          | some bs =>
+              have same : ([], bs) = (x, y) := by simpa [decodePair, rest] using decoded
+              obtain ⟨rfl, rfl⟩ := Prod.mk.inj same.symm
+              simp [encodePair, decodeBits_sound tail y rest]
+      | bit b =>
+          cases rest : decodePair tail with
+          | none => simp [decodePair, rest] at decoded
+          | some pair =>
+              have same : (b :: pair.1, pair.2) = (x, y) := by simpa [decodePair, rest] using decoded
+              obtain ⟨rfl, rfl⟩ := Prod.mk.inj same.symm
+              simp [encodePair, ih pair.1 pair.2 rest]
+
 /-- Reuse Mathlib's finite-encoding interface instead of inventing another codec. -/
 def collisionPairEncoding : Computability.Encoding (BitString × BitString) PairSymbol where
   encode := fun p => encodePair p.1 p.2

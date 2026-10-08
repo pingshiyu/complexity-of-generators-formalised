@@ -1,0 +1,22 @@
+import ComplexityOfGenerators.Proofs.ElementaryGenerators
+import ComplexityOfGenerators.Proofs.RecognitionSearch
+import ComplexityOfGenerators.Proofs.GenerabilityContainment
+import ComplexityOfGenerators.Proofs.RecognizabilityContainment
+import ComplexityOfGenerators.Proofs.ClockedSampling
+import ComplexityOfGenerators.Proofs.ClockProgram
+import ComplexityOfGenerators.Proofs.BinaryInputCorrectness
+import ComplexityOfGenerators.Proofs.GeometricSampling
+import ComplexityOfGenerators.Proofs.CryptographicReduction
+import ComplexityOfGenerators.Proofs.BinaryCollisionReduction
+import ComplexityOfGenerators.Proofs.BinaryCollisionFinder
+import ComplexityOfGenerators.Proofs.TrialBoundExamples
+import ComplexityOfGenerators.Proofs.BoundedNondeterministicRecognition
+import ComplexityOfGenerators.Proofs.PolynomialGenerationContainment
+import ComplexityOfGenerators.Proofs.CollisionVerification
+import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
+import ComplexityOfGenerators.Proofs.EmptyWordGeneration
+import ComplexityOfGenerators.Proofs.NativeSpaceContainment
+import ComplexityOfGenerators.Proofs.PolynomialVerifiers
+
+/-! Completed components of the main proofs. This module contains no unfinished
+proofs; the outstanding main declarations remain in `MainTheorems`. -/

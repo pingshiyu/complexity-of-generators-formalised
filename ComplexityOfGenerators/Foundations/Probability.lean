@@ -14,6 +14,48 @@ namespace ComplexityOfGenerators
 open MeasureTheory
 open scoped ENNReal
 
+def streamPrefix (stream : BitStream) (n : ℕ) : BitString :=
+  List.ofFn (fun i : Fin n => stream i.val)
+
+@[simp] theorem streamPrefix_length (stream : BitStream) (n : ℕ) :
+    (streamPrefix stream n).length = n := by simp [streamPrefix]
+
+theorem stream_mem_prefix_cylinder (stream : BitStream) (n : ℕ) :
+    stream ∈ cylinder (streamPrefix stream n) := by
+  intro i
+  change stream i.val = (List.ofFn (fun j : Fin n => stream j.val))[i.val]
+  rw [List.getElem_ofFn]
+
+theorem mem_cylinder_of_prefix {stream : BitStream} {small large : BitString}
+    (initial : small <+: large) (member : stream ∈ cylinder large) :
+    stream ∈ cylinder small := by
+  obtain ⟨extra, rfl⟩ := initial
+  intro i
+  have bound : i.val < (small ++ extra).length := by simp; omega
+  have letter := member ⟨i.val, bound⟩
+  change stream i.val = (small ++ extra)[i.val] at letter
+  change stream i.val = small[i.val]
+  simpa only [List.getElem_append_left i.isLt] using letter
+
+theorem mem_cylinder_append {stream : BitStream} {first second : BitString}
+    (left : stream ∈ cylinder first)
+    (right : (fun i => stream (first.length + i)) ∈ cylinder second) :
+    stream ∈ cylinder (first ++ second) := by
+  intro i
+  change stream i.val = (first ++ second)[i.val]
+  by_cases inFirst : i.val < first.length
+  · have letter := left ⟨i.val, inFirst⟩
+    change stream i.val = first[i.val] at letter
+    simpa only [List.getElem_append_left inFirst] using letter
+  · have inSecond : i.val - first.length < second.length := by
+      have bound := i.isLt
+      simp only [List.length_append] at bound
+      omega
+    have offset : first.length + (i.val - first.length) = i.val := by omega
+    have letter := right ⟨i.val - first.length, inSecond⟩
+    change stream (first.length + (i.val - first.length)) = second[i.val - first.length] at letter
+    simpa only [offset, List.getElem_append_right (by omega : first.length ≤ i.val)] using letter
+
 instance : IsProbabilityMeasure fairCoinMeasure := by
   unfold fairCoinMeasure
   infer_instance
