@@ -29,9 +29,9 @@ theorem AuxiliaryFuel.next_progress (fuel : M.AuxiliaryFuel)
     (step : M.next data bits c = .running d) :
     c.auxiliaryHead < data.auxiliary.length ∧ d.auxiliaryHead = c.auxiliaryHead + 1 := by
   have h := fuel c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work c.workHead)
+    (if c.indexHead < data.index then some () else none) (c.work c.workHead)
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [next, action] at step
   | reject => simp [next, action] at step
   | readRandom no yes => simp [action] at h

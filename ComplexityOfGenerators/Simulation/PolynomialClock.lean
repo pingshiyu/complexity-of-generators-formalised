@@ -84,7 +84,7 @@ omit [Fintype O] in
     clockRead M p (some (clockWrite M p cell)) = cell := bootDecode_encode _ _
 
 def clockTransition (phase : ClockPhase O M.states M.symbols p.coefficient p.degree)
-    (input : Option I) (auxiliary : Option A) (index : Option Bool)
+    (input : Option I) (auxiliary : Option A) (index : Option Unit)
     (raw : Option (Fin (Fintype.card (ClockCell M.symbols p.degree) + 1))) :
     Instruction O (Fintype.card (ClockPhase O M.states M.symbols p.coefficient p.degree))
       (Fintype.card (ClockCell M.symbols p.degree) + 1) :=

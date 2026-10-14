@@ -106,7 +106,7 @@ theorem binaryOutputDecoder_observe (data : InputData I A) (bits : BitString) (c
       decodeOutputResult M (M.observe data bits c) := by
   simp only [Machine.observe, binaryOutputDecoder, decodeOutputConfiguration, Equiv.symm_apply_apply]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | readRandom no yes => split_ifs <;> rfl
@@ -117,7 +117,7 @@ theorem binaryOutputDecoder_next (data : InputData I A) (bits : BitString) (c : 
       decodeOutputResult M (M.next data bits c) := by
   simp only [Machine.next, binaryOutputDecoder, decodeOutputConfiguration, Equiv.symm_apply_apply]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | readRandom no yes =>

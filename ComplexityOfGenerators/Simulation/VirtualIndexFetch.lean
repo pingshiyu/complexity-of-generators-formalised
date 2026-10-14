@@ -56,7 +56,7 @@ theorem index_fetch (data : InputData Unit Bool) (bits : BitString) (length : â„
     none .stay .stay .stay .stay none
   have selectTable : N.transition start.state data.input[start.inputHead]?
       data.auxiliary[start.auxiliaryHead]?
-      (if start.indexHead < data.index then some true else none) (start.work start.workHead) =
+      (if start.indexHead < data.index then some () else none) (start.work start.workHead) =
       .step (indexControl M (.toOrigin source.state negative cache)) none .stay .stay .stay .stay none := by
     have cell := related.memory source.workHead
     simp [N, virtualIndexCore, Routine.machine, virtualIndexRoutine, virtualIndexTransition,
@@ -75,7 +75,7 @@ theorem index_fetch (data : InputData Unit Bool) (bits : BitString) (length : â„
     none .stay .stay .stay .stay none
   have enterTable : N.transition atOrigin.state data.input[atOrigin.inputHead]?
       data.auxiliary[atOrigin.auxiliaryHead]?
-      (if atOrigin.indexHead < data.index then some true else none) (atOrigin.work atOrigin.workHead) =
+      (if atOrigin.indexHead < data.index then some () else none) (atOrigin.work atOrigin.workHead) =
       .step (indexControl M (.toIndex source.state negative cache)) none .stay .stay .stay .stay none := by
     have cell := originSnapshot.memory 0
     simp [N, virtualIndexCore, Routine.machine, virtualIndexRoutine, virtualIndexTransition,
@@ -116,7 +116,7 @@ theorem index_fetched_observe (data : InputData Unit Bool) (bits : BitString) (l
   simp only [Int.natCast_nonneg, true_and, less, decide_true, Bool.not_true,
     Bool.false_eq_true, â†“reduceIte, decide_eq_true_eq]
   cases instruction : M.transition source.state none none
-      (if source.indexHead < length then some true else none) (source.work source.workHead) with
+      (if source.indexHead < length then some () else none) (source.work source.workHead) with
   | accept => simp [related.output, fetchedObservation]
   | reject => simp [fetchedObservation]
   | step state write work input auxiliary index emit => simp [fetchedObservation]

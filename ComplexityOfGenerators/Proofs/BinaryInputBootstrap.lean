@@ -26,12 +26,12 @@ theorem binary_input_initial (data : InputData Unit Bool) (bits : BitString) :
     (some (Fin.last symbols)) .right .stay .stay .stay none
   have first : M.transition M.initialConfiguration.state data.input[M.initialConfiguration.inputHead]?
       data.auxiliary[M.initialConfiguration.auxiliaryHead]?
-      (if M.initialConfiguration.indexHead < data.index then some true else none)
+      (if M.initialConfiguration.indexHead < data.index then some () else none)
       (M.initialConfiguration.work M.initialConfiguration.workHead) =
       .step (binaryInputControl .mark) none .left .stay .stay .stay none := by
     simp [M, binaryInputMachine, Machine.initialConfiguration, binaryInputInstruction]
   have second : M.transition marked.state data.input[marked.inputHead]? data.auxiliary[marked.auxiliaryHead]?
-      (if marked.indexHead < data.index then some true else none) (marked.work marked.workHead) =
+      (if marked.indexHead < data.index then some () else none) (marked.work marked.workHead) =
       .step (binaryInputControl .bottom) (some (Fin.last symbols)) .right .stay .stay .stay none := by
     simp [M, marked, Machine.stepConfiguration, binaryInputMachine, binaryInputInstruction]
   have bottomReady : BinaryPrepared program control alphabet .bottom [] 0 bottom := by
@@ -65,7 +65,7 @@ theorem binary_input_skip (data : InputData Unit Bool) (bits : BitString)
   obtain ⟨state, head, random, memory, output⟩ := prepared
   let d := M.stepConfiguration data c (binaryInputControl next) none .stay .stay .stay .stay none
   have instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (binaryInputControl next) none .stay .stay .stay .stay none := by
     simpa [M, binaryInputMachine, state] using table
   have live := M.observe_step data bits c _ _ _ _ _ _ _ instruction

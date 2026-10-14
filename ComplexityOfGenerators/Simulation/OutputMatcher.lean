@@ -117,7 +117,7 @@ theorem outputMatcher_observe (data : InputData α Bool) (bits : BitString) (sou
   simp only [Machine.observe, outputMatcher, matcherConfiguration, Equiv.symm_apply_apply,
     matcherSourceData, List.getElem?_nil]
   cases M.transition source.state none data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) with
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) with
   | accept =>
       simp only [matcherInstruction, matcher_finished_bool]
       by_cases same : source.output = data.input <;> simp [same, matcherResult, matcherOutcome]
@@ -132,7 +132,7 @@ theorem outputMatcher_next (data : InputData α Bool) (bits : BitString) (source
   simp only [Machine.next, outputMatcher, matcherConfiguration, Equiv.symm_apply_apply,
     matcherSourceData, List.getElem?_nil]
   cases M.transition source.state none data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) with
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) with
   | accept =>
       simp only [matcherInstruction, matcher_finished_bool]
       by_cases same : source.output = data.input <;> simp [same, matcherResult, matcherOutcome]

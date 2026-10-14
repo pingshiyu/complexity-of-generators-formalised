@@ -16,6 +16,10 @@ import ComplexityOfGenerators.Simulation.TapeBankTime
 import ComplexityOfGenerators.Simulation.CollisionParser
 import ComplexityOfGenerators.Simulation.CollisionHashPair
 import ComplexityOfGenerators.Simulation.CertificateVerifier
+import ComplexityOfGenerators.Simulation.TranscriptReplaySoundness
+import ComplexityOfGenerators.Simulation.TranscriptSamplerCorrectness
+import ComplexityOfGenerators.Simulation.RejectDrain
+import ComplexityOfGenerators.Simulation.DecisionComplement
 
 /-! Verified finite-control simulations, including input loading, finite-support
 restriction, and composition with Mathlib's recursive-program compiler. -/

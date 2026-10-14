@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Proofs.GeneratorCriteria
 import ComplexityOfGenerators.Proofs.ElementaryGenerators
 import ComplexityOfGenerators.Proofs.RecognitionSearch
 import ComplexityOfGenerators.Proofs.GenerabilityContainment
@@ -17,6 +18,12 @@ import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
 import ComplexityOfGenerators.Proofs.EmptyWordGeneration
 import ComplexityOfGenerators.Proofs.NativeSpaceContainment
 import ComplexityOfGenerators.Proofs.PolynomialVerifiers
+import ComplexityOfGenerators.Proofs.TranscriptScheme
+import ComplexityOfGenerators.Proofs.PolynomialCertificateSchemes
+import ComplexityOfGenerators.Proofs.CertificateSchemeGeneration
+import ComplexityOfGenerators.Proofs.ConstantBitGeneration
+import ComplexityOfGenerators.Proofs.ClosureArguments
+import ComplexityOfGenerators.Proofs.GeneratorNonclosure
 
 /-! Completed components of the main proofs. This module contains no unfinished
 proofs; the outstanding main declarations remain in `MainTheorems`. -/

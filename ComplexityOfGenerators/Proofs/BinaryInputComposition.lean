@@ -45,7 +45,7 @@ theorem binary_input_rewind_to_marker (data : InputData Unit Bool) (bits : BitSt
           simp [bootMemory, notMarker]
       let next := M.stepConfiguration data c (binaryInputControl .rewind) none .left .stay .stay .stay none
       have table : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-          (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+          (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
           .step (binaryInputControl .rewind) none .left .stay .stay .stay none := by
         simp [M, binaryInputMachine, state, binaryInputInstruction, unmarked]
       have live := M.observe_step data bits c _ _ _ _ _ _ _ table
@@ -112,7 +112,7 @@ theorem sequence_binary_input_bootstrap
   let d := M.stepConfiguration data c (binaryInputControl (.run (control default)))
     none .right .stay .stay .stay none
   have table : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (binaryInputControl (.run (control default))) none .right .stay .stay .stay none := by
     simp [M, binaryInputMachine, state, binaryInputInstruction, marker]
   have step : M.next data bits c = .running d := M.next_step data bits c _ _ _ _ _ _ _ table

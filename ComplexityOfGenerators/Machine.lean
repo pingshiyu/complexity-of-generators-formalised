@@ -7,6 +7,8 @@ import Mathlib.Data.List.OfFn
 The paper uses deterministic transducers driven by an explicit, read-once random
 tape. This model has one two-way work tape, an append-only output tape, and
 read-only tapes for ordinary input, auxiliary input, and the unary family index.
+Both ordinary unary input and the index use `Unit` symbols; they remain distinct
+tapes with independent heads. An index observation is `some ()` or the blank `none`.
 Unused input tapes are empty. Their heads are bounded by the end of their inputs;
 they cannot serve as unbounded counters outside the space accounting.
 
@@ -58,13 +60,13 @@ structure Machine (Input Auxiliary Output : Type) where
   states : ℕ
   symbols : ℕ
   initial : Fin states
-  transition : Fin states → Option Input → Option Auxiliary → Option Bool →
+  transition : Fin states → Option Input → Option Auxiliary → Option Unit →
     Option (Fin symbols) → Instruction Output states symbols
 
 structure InputData (Input Auxiliary : Type) where
   input : List Input := []
   auxiliary : List Auxiliary := []
-  /-- The read-only tape contains `index` copies of `true` (unary encoding). -/
+  /-- The read-only tape contains `index` copies of `()` (unary encoding over `Unit`). -/
   index : ℕ := 0
 
 structure Configuration {I A O : Type} (M : Machine I A O) where
@@ -111,7 +113,7 @@ by the two budgets in `GeneratorTimeBound`. -/
 def observe (data : InputData I A) (bits : BitString) (c : Configuration M) : RunState M :=
   match M.transition c.state (data.input[c.inputHead]?)
       (data.auxiliary[c.auxiliaryHead]?)
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | .accept => .halted (.accepted c.output)
   | .reject => .halted .rejected
   | .readRandom _ _ =>
@@ -121,7 +123,7 @@ def observe (data : InputData I A) (bits : BitString) (c : Configuration M) : Ru
 def next (data : InputData I A) (bits : BitString) (c : Configuration M) : RunState M :=
   match M.transition c.state (data.input[c.inputHead]?)
       (data.auxiliary[c.auxiliaryHead]?)
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | .accept => .halted (.accepted c.output)
   | .reject => .halted .rejected
   | .readRandom onFalse onTrue =>

@@ -38,7 +38,7 @@ def unaryBlockSimulator (program : TM0.Machine Γ Q) (control : Q ≃ Fin states
     change unarySwapInstruction (blockMachine program control alphabet blocks)
       ((blockSimulator program control alphabet blocks).machine.transition
         ((blockSimulator program control alphabet blocks).control q)
-        (index.map fun _ => ()) auxiliary (input.map fun _ => true) work) = _
+        index auxiliary input work) = _
     rw [(blockSimulator program control alphabet blocks).transitionCorrect]
     simp only [blockSimulator]
     cases program q (bootDecode alphabet work) with

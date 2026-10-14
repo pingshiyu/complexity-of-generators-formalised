@@ -57,7 +57,7 @@ theorem observe_executionBound (data : InputData I A) (bits : BitString) (t : �
     M.ExecutionBound data bits t (M.observe data bits c) := by
   unfold observe
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => exact h.output
   | reject => trivial
   | step next write work input auxiliary index emit => exact h
@@ -89,7 +89,7 @@ theorem next_executionBound (data : InputData I A) (bits : BitString) (t : ℕ)
     M.ExecutionBound data bits (t + 1) (M.next data bits c) := by
   unfold next
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => exact h.output.trans (Nat.le_succ t)
   | reject => trivial
   | step state write work input auxiliary index emit =>
@@ -158,7 +158,7 @@ the next instruction requests a random bit. -/
 theorem next_running_of_observe_running (data : InputData I A) (bits : BitString) (c : Configuration M)
     (live : M.observe data bits c = .running c) : ∃ d, M.next data bits c = .running d := by
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [observe, action] at live
   | reject => simp [observe, action] at live
   | step state write work input auxiliary index emit =>
@@ -188,9 +188,9 @@ theorem deterministic_running_randomHead (deterministic : M.Deterministic)
   have preserve : ∀ c d : Configuration M, M.next data bits c = .running d → d.randomHead = c.randomHead := by
     intro c d step
     have nonrandom := deterministic c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead)
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead)
     cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
     | accept => simp [next, action] at step
     | reject => simp [next, action] at step
     | readRandom no yes => simp [action] at nonrandom

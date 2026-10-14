@@ -34,7 +34,7 @@ theorem output_step_right (data : InputData Unit Bool) (bits : BitString)
   obtain ⟨state, output, tape⟩ := ready
   have head : read (c.work c.workHead) = some symbol := by simpa using tape 0
   have instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (outputControl next) none .right .stay .stay .stay emit := by
     simpa [M, outputMachine, state, head] using table
   let d := M.stepConfiguration data c (outputControl next) none .right .stay .stay .stay emit

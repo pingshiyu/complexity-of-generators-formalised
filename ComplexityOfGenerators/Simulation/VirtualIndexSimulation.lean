@@ -34,7 +34,7 @@ theorem index_simulates_next (data : InputData Unit Bool) (bits : BitString) (le
   have position : source.workHead = signedPosition negative distance := signedPosition_natAbs _ _ related.side
   obtain ⟨fetched, fetchedRelated, fetchRun⟩ := index_fetch M data bits length source negative distance position target related
   cases instruction : M.transition source.state none none
-      (if source.indexHead < length then some true else none) (source.work source.workHead) with
+      (if source.indexHead < length then some () else none) (source.work source.workHead) with
   | accept => simp [Machine.next, generatorData, instruction] at step
   | reject => simp [Machine.next, generatorData, instruction] at step
   | step next write work input auxiliary index emit =>

@@ -13,7 +13,7 @@ theorem transcriptSampler_step (data : InputData I A) (bits : BitString)
     (inputBound : c.inputHead ≤ data.input.length) (auxiliaryBound : c.auxiliaryHead ≤ data.auxiliary.length)
     (indexBound : c.indexHead ≤ data.index)
     (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step state write work input auxiliary index emit) :
     let d := M.stepConfiguration data c state write work input auxiliary index emit
     (transcriptSampler M).runFrom data bits (samplerConfiguration M c lead) 2 =
@@ -22,7 +22,7 @@ theorem transcriptSampler_step (data : InputData I A) (bits : BitString)
   let d := M.stepConfiguration data c state write work input auxiliary index emit
   have table : (transcriptSampler M).transition (samplerConfiguration M c lead).state
       data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (samplerControl M (.pad state)) write work input auxiliary index (some false) := by
     simp [transcriptSampler, samplerConfiguration, samplerInstruction, action]
   have live := (transcriptSampler M).observe_step data bits (samplerConfiguration M c lead)
@@ -45,7 +45,7 @@ theorem transcriptSampler_random (data : InputData I A) (bits : BitString)
     (inputBound : c.inputHead ≤ data.input.length) (auxiliaryBound : c.auxiliaryHead ≤ data.auxiliary.length)
     (indexBound : c.indexHead ≤ data.index) (head : c.workHead ∈ c.visited)
     (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) = .readRandom no yes)
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) = .readRandom no yes)
     (lookup : bits[c.randomHead]? = some bit) :
     let d := {c with state := if bit then yes else no, randomHead := c.randomHead + 1}
     (transcriptSampler M).runFrom data bits (samplerConfiguration M c lead) 2 =
@@ -79,7 +79,7 @@ theorem transcriptSampler_terminal (data : InputData I A) (bits : BitString)
   unfold Machine.observe at terminal
   simp only [Machine.observe, transcriptSampler, samplerConfiguration, Equiv.symm_apply_apply]
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept =>
       simp only [action, RunState.halted.injEq] at terminal
       subst outcome

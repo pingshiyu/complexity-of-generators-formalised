@@ -58,7 +58,7 @@ theorem tapeScan_with_heads (data : InputData I A) (bits : BitString)
         ih (fun k hk => move k (by omega)) (fun k hk => table k (by omega))
       have action : M.transition current.state data.input[current.inputHead]?
           data.auxiliary[current.auxiliaryHead]?
-          (if current.indexHead < data.index then some true else none) (current.work current.workHead) =
+          (if current.indexHead < data.index then some () else none) (current.work current.workHead) =
           .step state none (direction steps) .stay .stay .stay none := by
         rw [scan.state, initialState, scan.head, scan.memory]
         exact table steps (Nat.lt_succ_self _) _ _ _
@@ -97,7 +97,7 @@ theorem tapeScan (data : InputData I A) (bits : BitString)
         ih (fun k hk => move k (by omega)) (fun k hk => table k (by omega))
       have action : M.transition current.state data.input[current.inputHead]?
           data.auxiliary[current.auxiliaryHead]?
-          (if current.indexHead < data.index then some true else none) (current.work current.workHead) =
+          (if current.indexHead < data.index then some () else none) (current.work current.workHead) =
           .step state none (direction steps) .stay .stay .stay none := by
         rw [currentState, currentHead, memory]
         exact table steps (Nat.lt_succ_self _) _ _ _
@@ -135,7 +135,7 @@ theorem tapeScan_inputLeft (data : InputData I A) (bits : BitString)
         ih (fun k hk => move k (by omega)) (fun k hk => table k (by omega))
       have action : M.transition current.state data.input[current.inputHead]?
           data.auxiliary[current.auxiliaryHead]?
-          (if current.indexHead < data.index then some true else none) (current.work current.workHead) =
+          (if current.indexHead < data.index then some () else none) (current.work current.workHead) =
           .step state none (direction steps) .left .stay .stay none := by
         rw [currentState, currentHead, memory]
         exact table steps (Nat.lt_succ_self _) _ _ _

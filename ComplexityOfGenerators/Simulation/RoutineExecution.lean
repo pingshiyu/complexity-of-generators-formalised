@@ -27,7 +27,7 @@ theorem sequence_left_observe_related (data : InputData I A) (bits : BitString)
       ((sequenceMachine M routine).observe data bits (sequenceLeftConfiguration M routine c out)) := by
   simp only [Machine.observe, sequenceMachine, sequenceLeftConfiguration, Equiv.symm_apply_apply]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [sequenceLeftInstruction, SequenceLeftRelated]
   · split_ifs <;> rfl
   · rfl
@@ -38,7 +38,7 @@ theorem sequence_left_next_related (data : InputData I A) (bits : BitString)
       ((sequenceMachine M routine).next data bits (sequenceLeftConfiguration M routine c out)) := by
   simp only [Machine.next, sequenceMachine, sequenceLeftConfiguration, Equiv.symm_apply_apply]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [sequenceLeftInstruction, SequenceLeftRelated]
   · cases bits[c.randomHead]? with
     | none => rfl

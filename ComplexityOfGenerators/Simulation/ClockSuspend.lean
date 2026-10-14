@@ -50,7 +50,7 @@ theorem clock_suspend (data : InputData I A) (bits : BitString) (length : ℕ)
     (related : ClockReady M p length digits remaining source negative target)
     (bounds : ReadHeadBounds M data source) (action : ClockAction O M.states M.symbols)
     (instruction : M.transition source.state data.input[source.inputHead]? data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) = action.instruction) :
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) = action.instruction) :
     ∃ ticks ready, ticks ≤ 2 * source.workHead.natAbs + (p.degree + 1) * (2 * length + 5) + 3 ∧
       ready.state = clockControl M p (.execute action negative
         (clockNextBlock p remaining (clockDigitIncrement length digits).2)) ∧

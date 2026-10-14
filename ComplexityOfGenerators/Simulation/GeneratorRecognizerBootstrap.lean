@@ -39,13 +39,13 @@ theorem wordIndex_reset_entry (w : List α) (bits : BitString) :
   let done := L.stepConfiguration data marker
     (blockControl (wordIndexBlocks M) (.run ((Fintype.equivFin Unit) ()))) none .right .stay .stay .stay none
   have table : L.transition marker.state data.input[marker.inputHead]? data.auxiliary[marker.auxiliaryHead]?
-      (if marker.indexHead < data.index then some true else none) (marker.work marker.workHead) =
+      (if marker.indexHead < data.index then some () else none) (marker.work marker.workHead) =
       .step (blockControl (wordIndexBlocks M) (.run ((Fintype.equivFin Unit) ()))) none .right .stay .stay .stay none := by
     simp [L, wordIndexLoader, blockMachine, blockTransition, markerState, markerRead]
   have markerLive := L.observe_step data bits marker _ _ _ _ _ _ _ table
   have markerNext := L.next_step data bits marker _ _ _ _ _ _ _ table
   have accepts : L.transition done.state data.input[done.inputHead]? data.auxiliary[done.auxiliaryHead]?
-      (if done.indexHead < data.index then some true else none) (done.work done.workHead) = .accept := by
+      (if done.indexHead < data.index then some () else none) (done.work done.workHead) = .accept := by
     simp [L, wordIndexLoader, done, Machine.stepConfiguration, blockMachine, blockTransition, indexLoaderProgram, postInstruction]
   let ready : Configuration (indexInputReset M) := handoffConfiguration L routine data done []
   have head : ready.workHead = 0 := by
@@ -135,12 +135,12 @@ theorem generatorRecognizer_loaded (w : List α) (bits : BitString) :
   let finalState := sequenceControl (wordIndexLoader M) (machineRoutine (indexInputReset M)) (.inr (3 : Fin 4))
   let done := L.stepConfiguration data prepared finalState none .stay .stay .stay .stay none
   have sourceTable : L.transition prepared.state data.input[prepared.inputHead]? data.auxiliary[prepared.auxiliaryHead]?
-      (if prepared.indexHead < data.index then some true else none) (prepared.work prepared.workHead) =
+      (if prepared.indexHead < data.index then some () else none) (prepared.work prepared.workHead) =
       .step finalState none .stay .stay .stay .stay none := by simpa [data, decisionData] using table
   have sourceLive := L.observe_step data bits prepared _ _ _ _ _ _ _ sourceTable
   have sourceNext := L.next_step data bits prepared _ _ _ _ _ _ _ sourceTable
   have accepts : L.transition done.state data.input[done.inputHead]? data.auxiliary[done.auxiliaryHead]?
-      (if done.indexHead < data.index then some true else none) (done.work done.workHead) = .accept := by
+      (if done.indexHead < data.index then some () else none) (done.work done.workHead) = .accept := by
     simp [L, wordIndexPreparedLoader, done, Machine.stepConfiguration, finalState,
       sequenceMachine, machineRoutine, indexInputReset, sequenceRightInstruction]
   let targetReady := handoffConfiguration L routine data done []

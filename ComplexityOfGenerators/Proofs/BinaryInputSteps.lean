@@ -36,7 +36,7 @@ theorem binary_input_write (data : InputData Unit Bool) (bits : BitString)
   let d := M.stepConfiguration data c (binaryInputControl next)
     (some (bootEncode alphabet symbol)) .right .stay .stay .stay none
   have instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (binaryInputControl next) (some (bootEncode alphabet symbol)) .right .stay .stay .stay none := by
     simpa [M, binaryInputMachine, state] using table
   have live := M.observe_step data bits c _ _ _ _ _ _ _ instruction
@@ -65,7 +65,7 @@ theorem binary_input_random (data : InputData Unit Bool) (bits : BitString)
     state := if bit then binaryInputControl onTrue else binaryInputControl onFalse
     randomHead := consumed + 1 }
   have instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .readRandom (binaryInputControl onFalse) (binaryInputControl onTrue) := by
     simpa [M, binaryInputMachine, state] using table
   have bound : consumed < bits.length := by
@@ -92,7 +92,7 @@ theorem binary_input_exhausts (data : InputData Unit Bool) (bits : BitString)
   obtain ⟨state, head, random, memory, output⟩ := prepared
   have instruction : (binaryInputMachine program control alphabet).transition c.state
       data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .readRandom (binaryInputControl onFalse) (binaryInputControl onTrue) := by
     simpa [binaryInputMachine, state] using table
   simp [Machine.observe, instruction, random, show ¬ consumed < bits.length by omega]

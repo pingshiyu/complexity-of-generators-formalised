@@ -28,7 +28,7 @@ theorem transcriptReplay_step (input : List I) (n : ℕ) (lead : BitString) (bit
     (c : Configuration M) (state : Fin M.states) (write : Option (Fin M.symbols))
     (work ordinary auxiliary index : Move) (emit : Option O)
     (action : M.transition c.state input[c.inputHead]? none
-      (if c.indexHead < n then some true else none) (c.work c.workHead) =
+      (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step state write work ordinary auxiliary index emit) :
     let data := transcriptData input n (lead ++ bit :: tail)
     let start := transcriptConfiguration M c lead.length
@@ -42,13 +42,13 @@ theorem transcriptReplay_step (input : List I) (n : ℕ) (lead : BitString) (bit
     rw [List.getElem?_append_right le_rfl]
     simp
   have table : (transcriptReplay M).transition (transcriptConfiguration M c lead.length).state
-      input[c.inputHead]? (some bit) (if c.indexHead < n then some true else none) (c.work c.workHead) =
+      input[c.inputHead]? (some bit) (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step (transcriptControl M (some state)) write work ordinary .right index emit := by
     simp [transcriptReplay, transcriptConfiguration, transcriptInstruction, action]
   have table' : (transcriptReplay M).transition (transcriptConfiguration M c lead.length).state
       (transcriptData input n (lead ++ bit :: tail)).input[c.inputHead]?
       (transcriptData input n (lead ++ bit :: tail)).auxiliary[lead.length]?
-      (if c.indexHead < n then some true else none) (c.work c.workHead) =
+      (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step (transcriptControl M (some state)) write work ordinary .right index emit := by
     simpa only [transcriptData, lookup] using table
   refine ⟨(transcriptReplay M).observe_step _ bits _ _ _ _ _ _ _ _ table', ?_⟩
@@ -63,7 +63,7 @@ theorem transcriptReplay_random (input : List I) (n : ℕ) (lead : BitString) (b
     (inputBound : c.inputHead ≤ input.length) (indexBound : c.indexHead ≤ n)
     (head : c.workHead ∈ c.visited)
     (action : M.transition c.state input[c.inputHead]? none
-      (if c.indexHead < n then some true else none) (c.work c.workHead) = .readRandom no yes) :
+      (if c.indexHead < n then some () else none) (c.work c.workHead) = .readRandom no yes) :
     let data := transcriptData input n (lead ++ bit :: tail)
     let start := transcriptConfiguration M c lead.length
     let finish := transcriptConfiguration M {c with state := if bit then yes else no, randomHead := 0}
@@ -75,13 +75,13 @@ theorem transcriptReplay_random (input : List I) (n : ℕ) (lead : BitString) (b
     rw [List.getElem?_append_right le_rfl]
     simp
   have table : (transcriptReplay M).transition (transcriptConfiguration M c lead.length).state
-      input[c.inputHead]? (some bit) (if c.indexHead < n then some true else none) (c.work c.workHead) =
+      input[c.inputHead]? (some bit) (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step (transcriptControl M (some (if bit then yes else no))) none .stay .stay .right .stay none := by
     simp [transcriptReplay, transcriptConfiguration, transcriptInstruction, action]
   have table' : (transcriptReplay M).transition (transcriptConfiguration M c lead.length).state
       (transcriptData input n (lead ++ bit :: tail)).input[c.inputHead]?
       (transcriptData input n (lead ++ bit :: tail)).auxiliary[lead.length]?
-      (if c.indexHead < n then some true else none) (c.work c.workHead) =
+      (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step (transcriptControl M (some (if bit then yes else no))) none .stay .stay .right .stay none := by
     simpa only [transcriptData, lookup] using table
   refine ⟨(transcriptReplay M).observe_step _ bits _ _ _ _ _ _ _ _ table', ?_⟩

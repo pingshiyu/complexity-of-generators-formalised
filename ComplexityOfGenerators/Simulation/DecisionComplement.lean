@@ -56,7 +56,7 @@ theorem decisionComplement_observe (data : InputData I A) (bits : BitString) (c 
       complementResult M (M.observe data bits c) := by
   simp only [Machine.observe, decisionComplement, complementConfiguration]
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [action, complementResult, complementOutcome, complementConfiguration]
   split_ifs <;> rfl
 
@@ -65,7 +65,7 @@ theorem decisionComplement_next (data : InputData I A) (bits : BitString) (c : C
       complementResult M (M.next data bits c) := by
   simp only [Machine.next, decisionComplement, complementConfiguration]
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | readRandom no yes => cases bits[c.randomHead]? <;> rfl

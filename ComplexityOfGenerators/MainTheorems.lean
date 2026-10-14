@@ -6,6 +6,9 @@ import ComplexityOfGenerators.Proofs.PolynomialGenerationContainment
 import ComplexityOfGenerators.Proofs.BinaryCollisionFinder
 import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
 import ComplexityOfGenerators.Foundations.LanguageClosure
+import ComplexityOfGenerators.Proofs.PolynomialCertificateSchemes
+import ComplexityOfGenerators.Proofs.CertificateSchemeGeneration
+import ComplexityOfGenerators.Proofs.GeneratorNonclosure
 
 /-!
 # Every result marked “Theorem” in the supplied paper
@@ -14,8 +17,8 @@ Source: `complexity-of-generators-formalisation.pdf`, *Complexity Theory of
 Randomised Testing*. There are five numbered theorems. Each docstring below
 quotes its mathematical statement and identifies its printed page number.
 
-Theorems 3.1 and 5.1 are proved in the retained finite-control machine model. The three
-remaining `sorry` bodies are explicit proof obligations. Verified components
+Theorems 3.1, 5.1, 7.1 and 7.2 are proved in the retained finite-control machine model.
+The remaining `sorry` body in Theorem 6.1 is an explicit proof obligation. Verified components
 of the complexity proofs are in `Simulation` and `Proofs`; their presence does
 not establish the remaining main theorems. There are no custom axioms
 asserting supporting complexity-theoretic results. In particular, Theorem 7.1
@@ -69,7 +72,10 @@ certificate to certify an instance of the requested length. -/
 theorem theorem_7_1_generators_are_certificate_schemes
     {α : Type} [Fintype α] (L : Language α) :
     L ∈ PG α ↔ ∃ V : PolynomialVerifier L, HasCertificateScheme V := by
-  sorry
+  constructor
+  · exact pg_has_certificateScheme
+  · rintro ⟨V, scheme⟩
+    exact hasCertificateScheme_mem_pg scheme
 
 /-- **Theorem 7.2 (Efficient Generators are not Composable), p. 0:25.**
 “If NP ≠ coNP, then PG is not closed under complementation. If collision-resistant
@@ -78,7 +84,7 @@ The two clauses have independent assumptions; neither is required for the other.
 Closure is extensional language closure, as in the theorem's textual statement. -/
 theorem theorem_7_2_efficient_generators_are_not_composable :
     (NP Bool ≠ coNP Bool → ¬ ClosedUnderComplement (PG Bool)) ∧
-    (CollisionResistantHashFunctionsExist → ¬ ClosedUnderIntersection (PG Bool)) := by
-  sorry
+    (CollisionResistantHashFunctionsExist → ¬ ClosedUnderIntersection (PG Bool)) :=
+  ⟨pg_not_complement_closed, pg_not_intersection_closed⟩
 
 end ComplexityOfGenerators

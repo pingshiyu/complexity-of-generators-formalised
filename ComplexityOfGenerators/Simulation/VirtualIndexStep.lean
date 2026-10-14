@@ -19,7 +19,7 @@ theorem index_fetched_step (data : InputData Unit Bool) (bits : BitString) (leng
     (next : Fin M.states) (write : Option (Fin M.symbols))
     (work input auxiliary index : Move) (emit : Option O)
     (instruction : M.transition source.state none none
-      (if source.indexHead < length then some true else none) (source.work source.workHead) =
+      (if source.indexHead < length then some () else none) (source.work source.workHead) =
       .step next write work input auxiliary index emit) :
     ∃ ready newNegative,
       IndexReady M length (M.stepConfiguration (generatorData length) source next write work input auxiliary index emit)
@@ -35,7 +35,7 @@ theorem index_fetched_step (data : InputData Unit Bool) (bits : BitString) (leng
     .stay .stay .stay none
   have clearTable : N.transition target.state data.input[target.inputHead]?
       data.auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < data.index then some true else none) (target.work target.workHead) =
+      (if target.indexHead < data.index then some () else none) (target.work target.workHead) =
       .step (indexControl M (.placeIndex action negative))
         (some (indexWrite M {cell with indexHead := false})) (virtualIndexMove M cell index)
         .stay .stay .stay none := by
@@ -58,7 +58,7 @@ theorem index_fetched_step (data : InputData Unit Bool) (bits : BitString) (leng
     .stay .stay .stay .stay none
   have placeTable : N.transition cleared.state data.input[cleared.inputHead]?
       data.auxiliary[cleared.auxiliaryHead]?
-      (if cleared.indexHead < data.index then some true else none) (cleared.work cleared.workHead) =
+      (if cleared.indexHead < data.index then some () else none) (cleared.work cleared.workHead) =
       .step (indexControl M (.returnOrigin action negative))
         (some (indexWrite M {indexRead M (cleared.work cleared.workHead) with indexHead := true}))
         .stay .stay .stay .stay none := by

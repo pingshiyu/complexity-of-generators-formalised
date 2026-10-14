@@ -45,7 +45,7 @@ theorem collision_hash_next (word : BitString) (second : Bool) (frame)
     (inputBound : source.inputHead ≤ input.length) (indexBound : source.indexHead ≤ n)
     (next : Fin M.states) (write : Option (Fin M.symbols)) (wm im am ix : Move) (emit : Option Bool)
     (table : M.transition source.state input[source.inputHead]? none
-      (if source.indexHead < n then some true else none) (source.work source.workHead) =
+      (if source.indexHead < n then some () else none) (source.work source.workHead) =
       .step next write wm im am ix emit) :
     ∃ t, t ≤ 6 ∧ (collisionBank M).Steps word (hashBankConfiguration M second frame source) t
       (hashBankConfiguration M second frame
@@ -69,7 +69,7 @@ theorem collision_hash_accept (word : BitString) (second : Bool) (frame)
     (inputTape : frame.tape (hashInputTape second) = collisionWord M input)
     (indexTape : frame.tape 2 = collisionWord M (List.replicate n true))
     (table : M.transition source.state input[source.inputHead]? none
-      (if source.indexHead < n then some true else none) (source.work source.workHead) = .accept) :
+      (if source.indexHead < n then some () else none) (source.work source.workHead) = .accept) :
     (collisionBank M).Steps word (hashBankConfiguration M second frame source) 3
       {hashBankConfiguration M second frame source with
         state := if second then .resetOutput false else .resetIndex} := by

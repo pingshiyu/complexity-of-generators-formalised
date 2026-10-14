@@ -21,7 +21,7 @@ inductive ExecutionTranscript (data : InputData I A) (bits : BitString) :
       (state : Fin M.states) (write : Option (Fin M.symbols))
       (work input auxiliary index : Move) (emit : Option O)
       (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
         .step state write work input auxiliary index emit)
       (rest : ExecutionTranscript data bits
         (M.stepConfiguration data c state write work input auxiliary index emit) tail outcome) :
@@ -29,7 +29,7 @@ inductive ExecutionTranscript (data : InputData I A) (bits : BitString) :
   | random (c : Configuration M) (bit : Bool) (tail : BitString) (outcome : Outcome O)
       (no yes : Fin M.states)
       (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) = .readRandom no yes)
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) = .readRandom no yes)
       (lookup : bits[c.randomHead]? = some bit)
       (rest : ExecutionTranscript data bits
         {c with state := if bit then yes else no, randomHead := c.randomHead + 1} tail outcome) :
@@ -56,7 +56,7 @@ theorem executionTranscript_of_runFrom (data : InputData I A) (bits : BitString)
           rw [M.runFrom_shift data bits c d observation next t] at halted
           obtain ⟨log, length, recorded⟩ := ih d halted
           cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-              (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+              (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
           | accept => simp [observe, action] at observation
           | reject => simp [observe, action] at observation
           | step state write work input auxiliary index emit =>
@@ -104,7 +104,7 @@ theorem ExecutionTranscript.accepting {data : InputData I A} {bits : BitString}
   | halt c outcome terminal =>
       subst outcome
       cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-          (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+          (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
       | accept =>
           have same : c.output = word := by simpa [observe, action] using terminal
           rw [← same]

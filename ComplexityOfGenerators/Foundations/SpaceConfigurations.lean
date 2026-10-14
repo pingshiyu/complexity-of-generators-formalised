@@ -35,7 +35,7 @@ supplied only to `readRandom`; this is the native choice convention. -/
 def DecisionView.advance (data : InputData I A) (choice : Bool) (c : M.DecisionView) :
     Option M.DecisionView :=
   match M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | .accept | .reject => none
   | .readRandom no yes => some {c with state := if choice then yes else no}
   | .step state write work input auxiliary index _ => some {
@@ -54,7 +54,7 @@ theorem next_decisionView (data : InputData I A) (bits : BitString) (c d : Confi
     (step : M.next data bits c = .running d) :
     ∃ choice, (M.decisionView c).advance M data choice = some (M.decisionView d) := by
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [next, action] at step
   | reject => simp [next, action] at step
   | readRandom no yes =>

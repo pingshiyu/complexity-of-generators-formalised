@@ -61,7 +61,7 @@ theorem certificateVerifier_observe (word : List α) (certificate bits : BitStri
   unfold Machine.observe certificateVerifier certificateConfiguration verifierData decisionData
   simp only [List.getElem?_nil]
   cases action : M.transition c.state word[c.inputHead]? none
-      (if c.indexHead < 0 then some true else none) (c.work c.workHead) with
+      (if c.indexHead < 0 then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | step state write work input auxiliary index emit => rfl
@@ -84,7 +84,7 @@ theorem certificateVerifier_next (word : List α) (certificate bits : BitString)
   unfold Machine.next certificateVerifier certificateConfiguration verifierData decisionData
   simp only [List.getElem?_nil]
   cases action : M.transition c.state word[c.inputHead]? none
-      (if c.indexHead < 0 then some true else none) (c.work c.workHead) with
+      (if c.indexHead < 0 then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | step state write work input auxiliary index emit =>
@@ -107,7 +107,7 @@ private theorem next_randomHead_le (word : List α) (certificate : BitString)
   unfold Machine.next at step
   cases action : M.transition c.state (decisionData word).input[c.inputHead]?
       (decisionData word).auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < (decisionData word).index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < (decisionData word).index then some () else none) (c.work c.workHead) with
   | accept => simp [action] at step
   | reject => simp [action] at step
   | step state write work input auxiliary index emit =>

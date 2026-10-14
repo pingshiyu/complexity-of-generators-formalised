@@ -43,7 +43,7 @@ theorem clock_execute_step (data : InputData I A) (bits : BitString) (length : â
     (some (clockWrite M p {clockRead M p (target.work target.workHead) with
       source := value, workHead := false})) work input auxiliary index emit
   have table : N.transition target.state data.input[target.inputHead]? data.auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < data.index then some true else none) (target.work target.workHead) =
+      (if target.indexHead < data.index then some () else none) (target.work target.workHead) =
       .step (clockControl M p (.placeWork next nextSide remaining))
         (some (clockWrite M p {clockRead M p (target.work target.workHead) with
           source := value, workHead := false})) work input auxiliary index emit := by
@@ -105,7 +105,7 @@ theorem clock_execute_random (data : InputData I A) (bits : BitString) (length :
     state := clockControl M p (.source (if bit then yes else no) negative remaining)
     randomHead := target.randomHead + 1}
   have table : N.transition target.state data.input[target.inputHead]? data.auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < data.index then some true else none) (target.work target.workHead) =
+      (if target.indexHead < data.index then some () else none) (target.work target.workHead) =
       .readRandom (clockControl M p (.source no negative remaining))
         (clockControl M p (.source yes negative remaining)) := by
     simp [N, polynomialClockCore, Routine.machine, polynomialClockRoutine, clockTransition, state]

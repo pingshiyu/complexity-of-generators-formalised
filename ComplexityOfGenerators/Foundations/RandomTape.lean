@@ -35,7 +35,7 @@ theorem observe_step (data : InputData I A) (bits : BitString) (c : Configuratio
     (state : Fin M.states) (write : Option (Fin M.symbols))
     (workMove inputMove auxiliaryMove indexMove : Move) (emit : Option O)
     (instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step state write workMove inputMove auxiliaryMove indexMove emit) :
     M.observe data bits c = .running c := by simp [observe, instruction]
 
@@ -43,7 +43,7 @@ theorem next_step (data : InputData I A) (bits : BitString) (c : Configuration M
     (state : Fin M.states) (write : Option (Fin M.symbols))
     (workMove inputMove auxiliaryMove indexMove : Move) (emit : Option O)
     (instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step state write workMove inputMove auxiliaryMove indexMove emit) :
     M.next data bits c = .running
       (M.stepConfiguration data c state write workMove inputMove auxiliaryMove indexMove emit) := by
@@ -203,7 +203,7 @@ theorem deterministic_observe (deterministic : M.Deterministic)
     M.observe data bits c = M.observe data other c := by
   have nonrandom := deterministic c.state data.input[c.inputHead]?
     data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work c.workHead)
+    (if c.indexHead < data.index then some () else none) (c.work c.workHead)
   unfold observe
   split
   all_goals try rfl
@@ -215,7 +215,7 @@ theorem deterministic_next (deterministic : M.Deterministic)
     M.next data bits c = M.next data other c := by
   have nonrandom := deterministic c.state data.input[c.inputHead]?
     data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work c.workHead)
+    (if c.indexHead < data.index then some () else none) (c.work c.workHead)
   unfold next
   split
   all_goals try rfl

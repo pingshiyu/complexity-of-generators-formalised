@@ -17,7 +17,7 @@ theorem index_fetched_random (data : InputData Unit Bool) (bits : BitString) (le
     (target : Configuration (virtualIndexCore M)) (related : IndexFetched M length source negative target)
     (no yes : Fin M.states) (bit : Bool)
     (instruction : M.transition source.state none none
-      (if source.indexHead < length then some true else none) (source.work source.workHead) = .readRandom no yes)
+      (if source.indexHead < length then some () else none) (source.work source.workHead) = .readRandom no yes)
     (read : bits[source.randomHead]? = some bit) :
     ∃ ready newNegative,
       IndexReady M length {source with state := if bit then yes else no, randomHead := source.randomHead + 1}
@@ -32,7 +32,7 @@ theorem index_fetched_random (data : InputData Unit Bool) (bits : BitString) (le
     randomHead := target.randomHead + 1}
   have readTable : N.transition target.state data.input[target.inputHead]?
       data.auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < data.index then some true else none) (target.work target.workHead) =
+      (if target.indexHead < data.index then some () else none) (target.work target.workHead) =
       .readRandom (indexControl M (.returnOrigin (indexResume M no) negative))
         (indexControl M (.returnOrigin (indexResume M yes) negative)) := by
     have readCell := related.memory (source.indexHead : ℤ)

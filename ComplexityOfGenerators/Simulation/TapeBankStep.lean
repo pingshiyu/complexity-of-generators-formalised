@@ -52,7 +52,7 @@ theorem bank_step (word bits : BitString) (r : ℕ) (source : BankConfiguration 
     simp [j, sides, side, position, written, cell, cellEq, bankCell]
   have actual : M.transition fetched.state (decisionData word).input[fetched.inputHead]?
       (decisionData word).auxiliary[fetched.auxiliaryHead]?
-      (if fetched.indexHead < (decisionData word).index then some true else none)
+      (if fetched.indexHead < (decisionData word).index then some () else none)
       (fetched.work fetched.workHead) =
         .step (bankControl (.place next sides j)) written work input .stay .stay none := by
     simpa [decisionData] using action

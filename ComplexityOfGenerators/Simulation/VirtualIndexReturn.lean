@@ -48,7 +48,7 @@ theorem index_return (data : InputData Unit Bool) (bits : BitString) (length : â
     none .stay .stay .stay .stay none
   have enterTable : N.transition origin.state data.input[origin.inputHead]?
       data.auxiliary[origin.auxiliaryHead]?
-      (if origin.indexHead < data.index then some true else none) (origin.work origin.workHead) =
+      (if origin.indexHead < data.index then some () else none) (origin.work origin.workHead) =
       .step (indexControl M (.returnWork action negative)) none .stay .stay .stay .stay none := by
     simp [N, virtualIndexCore, Routine.machine, virtualIndexRoutine, virtualIndexTransition,
       originScan.state, state, originScan.head, originMemory 0, virtualIndexCell]
@@ -69,7 +69,7 @@ theorem index_return (data : InputData Unit Bool) (bits : BitString) (length : â
     none .stay .stay .stay .stay none
   have executeTable : N.transition atWork.state data.input[atWork.inputHead]?
       data.auxiliary[atWork.auxiliaryHead]?
-      (if atWork.indexHead < data.index then some true else none) (atWork.work atWork.workHead) =
+      (if atWork.indexHead < data.index then some () else none) (atWork.work atWork.workHead) =
       .step (indexControl M (.execute action negative)) none .stay .stay .stay .stay none := by
     simp [N, virtualIndexCore, Routine.machine, virtualIndexRoutine, virtualIndexTransition,
       workScan.state, entered, Machine.stepConfiguration, atWorkHead, workMemory workHead, virtualIndexCell]
@@ -85,7 +85,7 @@ theorem index_return (data : InputData Unit Bool) (bits : BitString) (length : â
     action.move .stay .stay .stay action.emit
   have writeTable : N.transition executing.state data.input[executing.inputHead]?
       data.auxiliary[executing.auxiliaryHead]?
-      (if executing.indexHead < data.index then some true else none) (executing.work executing.workHead) =
+      (if executing.indexHead < data.index then some () else none) (executing.work executing.workHead) =
       .step (indexControl M (.placeWork action.next side))
         (some (indexWrite M {cell with source := indexActionValue M action (work workHead), workHead := false}))
         action.move .stay .stay .stay action.emit := by
@@ -110,7 +110,7 @@ theorem index_return (data : InputData Unit Bool) (bits : BitString) (length : â
     .stay .stay .stay .stay none
   have placeTable : N.transition written.state data.input[written.inputHead]?
       data.auxiliary[written.auxiliaryHead]?
-      (if written.indexHead < data.index then some true else none) (written.work written.workHead) =
+      (if written.indexHead < data.index then some () else none) (written.work written.workHead) =
       .step (indexControl M (.source action.next side))
         (some (indexWrite M {indexRead M (written.work written.workHead) with workHead := true}))
         .stay .stay .stay .stay none := by

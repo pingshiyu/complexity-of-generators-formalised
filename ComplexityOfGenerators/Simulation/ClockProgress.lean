@@ -37,7 +37,7 @@ theorem clock_simulates_next (data : InputData I A) (bits : BitString) (length :
         (polynomialClockCore M p).observe data bits ready := by
   let N := polynomialClockCore M p
   cases instruction : M.transition source.state data.input[source.inputHead]? data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) with
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) with
   | accept => simp [Machine.next, instruction] at step
   | reject => simp [Machine.next, instruction] at step
   | step next write work input auxiliary index emit =>
@@ -76,7 +76,7 @@ theorem clock_expired (data : InputData I A) (bits : BitString) (length : ℕ) (
       result.acceptedWord = (M.observe data bits source).acceptedWord := by
   have readCell := related.memory source.workHead
   cases instruction : M.transition source.state data.input[source.inputHead]? data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) with
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) with
   | accept =>
       refine ⟨.accepted source.output, ?_, ?_⟩
       · simp [Machine.observe, polynomialClockCore, Routine.machine, polynomialClockRoutine, clockTransition,
@@ -114,7 +114,7 @@ theorem clock_simulates_halted (data : InputData I A) (bits : BitString) (length
       (polynomialClockCore M p).runFrom data bits target ticks = .halted result := by
   have readCell := related.memory source.workHead
   cases instruction : M.transition source.state data.input[source.inputHead]? data.auxiliary[source.auxiliaryHead]?
-      (if source.indexHead < data.index then some true else none) (source.work source.workHead) with
+      (if source.indexHead < data.index then some () else none) (source.work source.workHead) with
   | accept =>
       have same : result = .accepted source.output := by simpa [Machine.observe, instruction] using halted.symm
       subst result

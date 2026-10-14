@@ -25,13 +25,13 @@ theorem block_initial (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
     (some (Fin.last symbols)) .right .stay .stay .stay none
   have first : M.transition M.initialConfiguration.state input[M.initialConfiguration.inputHead]?
       (decisionData input).auxiliary[M.initialConfiguration.auxiliaryHead]?
-      (if M.initialConfiguration.indexHead < (decisionData input).index then some true else none)
+      (if M.initialConfiguration.indexHead < (decisionData input).index then some () else none)
       (M.initialConfiguration.work M.initialConfiguration.workHead) =
       .step (blockControl blocks .mark) none .left .stay .stay .stay none := by
     simp [M, blockMachine, Machine.initialConfiguration, blockTransition]
   have second : M.transition marked.state input[marked.inputHead]?
       (decisionData input).auxiliary[marked.auxiliaryHead]?
-      (if marked.indexHead < (decisionData input).index then some true else none)
+      (if marked.indexHead < (decisionData input).index then some () else none)
       (marked.work marked.workHead) =
       .step (blockControl blocks blocks.firstPrefix) (some (Fin.last symbols)) .right .stay .stay .stay none := by
     simp [M, marked, Machine.stepConfiguration, blockMachine, blockTransition]
@@ -75,7 +75,7 @@ theorem block_rewind (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
         (blockControl blocks (.run (control default))) none .right .stay .stay .stay none
       have transition : M.transition target.state input[target.inputHead]?
           (decisionData input).auxiliary[target.auxiliaryHead]?
-          (if target.indexHead < (decisionData input).index then some true else none)
+          (if target.indexHead < (decisionData input).index then some () else none)
           (target.work target.workHead) =
           .step (blockControl blocks (.run (control default))) none .right .stay .stay .stay none := by
         simp [M, blockMachine, state, blockTransition, marker]
@@ -102,7 +102,7 @@ theorem block_rewind (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
         none .left .stay .stay .stay none
       have transition : M.transition target.state input[target.inputHead]?
           (decisionData input).auxiliary[target.auxiliaryHead]?
-          (if target.indexHead < (decisionData input).index then some true else none)
+          (if target.indexHead < (decisionData input).index then some () else none)
           (target.work target.workHead) =
           .step (blockControl blocks .rewind) none .left .stay .stay .stay none := by
         simp only [M, blockMachine, state, Equiv.symm_apply_apply, blockTransition, ite_eq_right unmarked]

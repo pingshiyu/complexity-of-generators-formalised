@@ -20,7 +20,7 @@ set_option backward.isDefEq.respectTransparency false
 structure Routine (I A O : Type) (symbols : ℕ) where
   states : ℕ
   initial : Fin states
-  transition : Fin states → Option I → Option A → Option Bool → Option (Fin symbols) →
+  transition : Fin states → Option I → Option A → Option Unit → Option (Fin symbols) →
     Instruction O states symbols
 
 def Routine.machine {I A O : Type} [Finite I] [Finite A] [Finite O]
@@ -88,7 +88,7 @@ theorem sequence_left_observe (data : InputData I A) (bits : BitString)
   unfold Machine.observe at live
   simp only [Machine.observe, sequenceMachine, sequenceLeftConfiguration, Equiv.symm_apply_apply]
   cases h : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [h] at live
   | reject => simp [h] at live
   | readRandom no yes =>
@@ -105,7 +105,7 @@ theorem sequence_left_next (data : InputData I A) (bits : BitString)
   unfold Machine.next at step
   simp only [Machine.next, sequenceMachine, sequenceLeftConfiguration, Equiv.symm_apply_apply]
   cases h : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [h] at step
   | reject => simp [h] at step
   | readRandom no yes =>
@@ -146,7 +146,7 @@ theorem sequence_right_observe (data : InputData I A) (bits : BitString)
   simp only [Machine.observe, sequenceMachine, sequenceRightConfiguration,
     Equiv.symm_apply_apply, Routine.machine]
   cases routine.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+    (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [sequenceRightInstruction, sequenceRightResult, sequenceRightConfiguration]
   split_ifs <;> rfl
 
@@ -157,7 +157,7 @@ theorem sequence_right_next (data : InputData I A) (bits : BitString)
   simp only [Machine.next, sequenceMachine, sequenceRightConfiguration,
     Equiv.symm_apply_apply, Routine.machine]
   cases routine.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+    (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [sequenceRightInstruction, sequenceRightResult, sequenceRightConfiguration]
   · cases bits[c.randomHead]? with
     | none => rfl
@@ -198,7 +198,7 @@ def handoffConfiguration (data : InputData I A) (c : Configuration M) (out : Lis
 theorem sequence_accept_handoff (data : InputData I A) (bits : BitString)
     (c : Configuration M) (out : List O)
     (accepted : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) = .accept) :
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) = .accept) :
     (sequenceMachine M routine).runFrom data bits (sequenceLeftConfiguration M routine c out) 1 =
       (sequenceMachine M routine).observe data bits
         (sequenceRightConfiguration M routine (handoffConfiguration M routine data c out)) := by
@@ -206,7 +206,7 @@ theorem sequence_accept_handoff (data : InputData I A) (bits : BitString)
   let start := sequenceLeftConfiguration M routine c out
   let finish := sequenceRightConfiguration M routine (handoffConfiguration M routine data c out)
   have table : combined.transition start.state data.input[start.inputHead]?
-      data.auxiliary[start.auxiliaryHead]? (if start.indexHead < data.index then some true else none)
+      data.auxiliary[start.auxiliaryHead]? (if start.indexHead < data.index then some () else none)
       (start.work start.workHead) =
       .step (sequenceControl M routine (.inr routine.initial)) none .stay .stay .stay .stay none := by
     simp [combined, start, sequenceMachine, sequenceLeftConfiguration, accepted, sequenceLeftInstruction]

@@ -15,9 +15,17 @@ Turing-machine compilers, with proved native input, output and random-tape adapt
 machine model and the existing cryptographic assumption, including a concrete
 polynomial-time collision decider and the generator-to-collision-finder reduction.
 
-Theorems 6.1, 7.1 and 7.2 remain unfinished and contain `sorry`. All supporting
-lemmas have complete proofs; no custom axioms are introduced. A successful build
-does not establish these three remaining results.
+**Theorem 7.1 is completely proved**, using native transcript verification and
+sampler/recoverer composition with polynomial bounds.
+
+**Theorem 7.2 is completely proved:** `NP ≠ coNP` implies that `PG` is not closed
+under complement; independently, collision-resistant hashes imply that `PG` is
+not closed under intersection. Both proofs use native machines and verified
+polynomial bounds.
+
+Only Theorem 6.1 remains unfinished and contains `sorry`. All supporting lemmas
+have complete proofs; no custom axioms are introduced. A successful build does
+not establish Theorem 6.1.
 
 **Theorem 7.1 uses two user-approved corrections to the certificate definitions:**
 certified instances may be empty words, and every sampled certificate must
@@ -26,7 +34,7 @@ certify an instance of the requested length. Certificates remain positive string
 proves why the original coverage condition needs correction: `{ε} ∈ PG`, but
 `LiteralCertificateCoverage` cannot cover its size-zero slice. The counterexample
 concerns that historical condition, not the corrected `HasCertificateScheme`.
-The `sorry` in Theorem 7.1 is not used by any supporting proof.
+The completed proof uses exactly the corrected `HasCertificateScheme` definition.
 
 ## Build
 
@@ -47,7 +55,7 @@ lake env lean scripts/AuditFoundations.lean
 ```
 
 Import `ComplexityOfGenerators` to obtain the entire development. The compiler
-will report three expected `declaration uses 'sorry'` warnings. Upstream VCVio
+will report one expected `declaration uses 'sorry'` warning for Theorem 6.1. Upstream VCVio
 also emits deprecation warnings. The first build compiles the imported
 Complexitylib and VCVio modules that are not covered by Mathlib's cache.
 
@@ -59,7 +67,7 @@ warning that Complexitylib has local changes refers to this recorded backport.
 Import `ComplexityOfGenerators.Foundations` to use the supporting development
 without importing the unfinished main theorems. The audit traverses the axiom
 dependencies of every declaration in those local modules, including the imported
-proofs they use, and explicitly checks the completed main Theorems 3.1 and 5.1.
+proofs they use, and explicitly checks the completed main Theorems 3.1, 5.1, 7.1 and 7.2.
 It rejects `sorryAx`, custom axioms and unchecked evaluation
 axioms; only `propext`, `Classical.choice` and `Quot.sound` are allowed.
 
@@ -114,6 +122,7 @@ The proof development contains these checked components:
 | [RecursiveGenerator.lean](ComplexityOfGenerators/Proofs/RecursiveGenerator.lean) | A concrete native generator for any total two-argument recursive word program: halting on every finite tape, no explicit rejection, almost-sure acceptance, and generated language exactly equal to the program's range. |
 | [RecognizabilityContainment.lean](ComplexityOfGenerators/Proofs/RecognizabilityContainment.lean) | Complete proof of `RE α ⊆ GEN α`, including the empty language and empty word, with no added assumption on the finite alphabet or recognizer. Together with the reverse containment, proves the main Theorem 3.1. |
 | [GeneratorSupport.lean](ComplexityOfGenerators/Proofs/GeneratorSupport.lean) | Positive acceptance measure for nonempty output support; probability one iff a generator's language is nonempty; accepted-prefix events equal the paper's minimal-prefix events. |
+| [GeneratorCriteria.lean](ComplexityOfGenerators/Proofs/GeneratorCriteria.lean) | Shared criteria deriving the generator probability condition from full trials and constructing a `PG` witness from exact length slices and separate polynomial seed/time bounds. Used by composition, fallback generation and deterministic replay. |
 | [ElementaryGenerators.lean](ComplexityOfGenerators/Proofs/ElementaryGenerators.lean) | Concrete empty and singleton generators, including the empty word; a concrete looping recognizer for the empty language. |
 | [GeometricSampling.lean](ComplexityOfGenerators/Proofs/GeometricSampling.lean) | Fair tapes almost surely have a stop after every offset, including the interleaved continuation-flag subsequences used by the binary sampler. The proof allows starting offsets chosen by earlier samples. |
 | [TrialBounds.lean](ComplexityOfGenerators/Foundations/TrialBounds.lean), [TrialBoundExamples.lean](ComplexityOfGenerators/Proofs/TrialBoundExamples.lean) | Separate uniform polynomial seed and execution budgets; monotonicity of the execution allowance, exact full-seed witnesses, and preservation of Remark 1's emptiness test. A delayed empty generator now has a complete `PG` witness. |
@@ -177,8 +186,8 @@ encoding are now verified, as is native `P ⊆ PSPACE` in
 The space-preserving simulations needed to apply Savitch to Theorem 6.1 remain
 unfinished. No quantitative `s²` bound for the local machine, or
 oracle-relativised result, is claimed. Polynomial-space generator constructions
-and the certificate sampler/recoverer constructions remain unfinished. The source
-issues and approved definition corrections are recorded below.
+remain unfinished. The source issues and approved definition corrections are
+recorded below.
 
 For Theorem 7.1,
 [CertificateVerifier.lean](ComplexityOfGenerators/Simulation/CertificateVerifier.lean)
@@ -186,11 +195,58 @@ compiles native choice-tape machines into deterministic certificate readers,
 with an exact one-step-per-step simulation and exhaustion changed to rejection.
 [PolynomialVerifiers.lean](ComplexityOfGenerators/Proofs/PolynomialVerifiers.lean)
 proves `np_has_polynomialVerifier` and `pg_has_polynomialVerifier`, with positive
-certificates of polynomial length. The corrected sampler/recoverer definitions
-also yield the exact union of recovered languages and a uniform polynomial time
-bound on all sampled recovery calls. These results do not yet construct the
-native composed generator or the forward sampler and recoverer. Theorem 7.2's
-closure constructions also remain unfinished.
+certificates of polynomial length.
+
+[TranscriptSampling.lean](ComplexityOfGenerators/Proofs/TranscriptSampling.lean)
+and [TranscriptRecovery.lean](ComplexityOfGenerators/Proofs/TranscriptRecovery.lean)
+now construct the native forward sampler and recoverer. Certificates have one
+padding bit followed by one bit per source step. The sampler takes at most
+`2t+1` steps for a `t`-step source run and preserves acceptance on the same
+random tape, hence almost-sure productivity. Replay consumes certificate fuel
+on every step, so it terminates even on malformed certificates. The recoverer
+turns replay rejection into random-tape exhaustion and has seed bound one and
+time bound `n+|c|+1`. All sampled certificates recover an instance of length `n`,
+and their recovered languages together equal the source slice, including at
+`n=0`. Every source word also has a polynomial-length recovery certificate.
+
+[PolynomialCertificateSchemes.lean](ComplexityOfGenerators/Proofs/PolynomialCertificateSchemes.lean)
+constructs the required deterministic polynomial verifier: it counts the input,
+replays the certificate with the virtual unary index, and compares the full output.
+It assembles the transcript machines into a certificate scheme.
+
+[CertificateSchemeGeneration.lean](ComplexityOfGenerators/Proofs/CertificateSchemeGeneration.lean)
+proves the reverse implication. It clocks the sampler and composes it with the
+recoverer using a verified four-tape bank, compiled to the retained one-work-tape
+machine. The proof accounts for certificate storage, rewinding, shared random-tape
+consumption, empty slices, and polynomial seed and execution bounds. Every sampled
+certificate certifies an instance, so every actual recovery call has the required
+polynomial bound. Neither direction assumes a simulation compiler as an axiom.
+
+The composition and fallback proofs share the criteria in
+[GeneratorCriteria.lean](ComplexityOfGenerators/Proofs/GeneratorCriteria.lean):
+`Machine.isGenerator_of_full_trials` handles the probability argument, and
+`mem_pg_of_lengthSlices` packages the native machine as a polynomial generator.
+The clocked sampler's support equality is exposed by `familyClock_generatedLanguage`.
+The fallback instruction and native-time polynomials have separate names so their
+cost estimates can be read without repeating the full expressions. These helpers
+preserve the original machine constructions and exact resource bounds.
+
+For Theorem 7.2,
+[FallbackGeneration.lean](ComplexityOfGenerators/Proofs/FallbackGeneration.lean)
+proves that every native NP language `L` has polynomial generators for both
+`L ∪ 0⁺` and `L ∪ 1⁺`. The finite program samples a word, runs a nondeterministic
+decision branch, and emits either the accepted word or the constant fallback.
+It handles the empty word separately, has no explicit rejection, and satisfies
+the separate polynomial seed and execution bounds.
+
+[NondeterministicUnion.lean](ComplexityOfGenerators/Proofs/NondeterministicUnion.lean)
+proves native NP union closure using a verified one-bit branch choice.
+[GeneratorNonclosure.lean](ComplexityOfGenerators/Proofs/GeneratorNonclosure.lean)
+then proves both contradictions. Complement closure of PG would put the union
+of the two fallback-language complements in NP; that union is `Lᶜ`, so
+`NP = coNP`. Intersection closure would put the secure collision language in PG,
+because `(L ∪ 0⁺) ∩ (L ∪ 1⁺) = L`, contradicting Theorem 5.1's collision-finder
+reduction. The two conclusions retain their independent original assumptions.
 
 ## Theorem correspondence
 
@@ -213,7 +269,14 @@ authors' theorems are outside the requested main-theorem inventory.
 - [Machine.lean](ComplexityOfGenerators/Machine.lean) gives an operational machine
   with finite control and finite alphabets. It has one work tape, read-only inputs,
   a read-once random tape, and an append-only output tape. A transition cannot
-  invoke an arbitrary computation. Unused inputs are empty. Halting observations
+  invoke an arbitrary computation. Ordinary unary input uses `List Unit`, and
+  the dedicated index exposes `Option Unit`: `some ()` is a mark and `none` is
+  blank. These remain separate tapes with independent heads; `InputData.index`
+  stores the index length as a natural number. The unary adapter swaps symbols
+  directly. Simulators may store marks as Boolean occupancy flags or binary
+  cells, which they explicitly decode at the native machine boundary. Random
+  bits, certificates, and ordinary binary inputs retain their Boolean alphabets.
+  Unused inputs are empty. Halting observations
   take no extra transition; work-tape space includes cells visited immediately
   before halting. Equivalence with the paper's tape conventions remains a future
   proof obligation.

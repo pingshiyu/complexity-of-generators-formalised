@@ -26,7 +26,7 @@ theorem output_finish (data : InputData Unit Bool) (bits : BitString)
   obtain ⟨state, output, tape⟩ := ready
   have head : read (c.work c.workHead) = none := by simpa using tape 0
   have instruction : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (outputControl .finish) none .stay .stay .stay .stay (some letter) := by
     simp [M, outputMachine, state, head, outputInstruction, decodeOutputPrefix_correct]
   let d := M.stepConfiguration data c (outputControl .finish) none .stay .stay .stay .stay (some letter)

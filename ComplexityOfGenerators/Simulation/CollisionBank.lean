@@ -4,6 +4,10 @@ import ComplexityOfGenerators.Proofs.CollisionVerification
 /-!
 # The finite-control collision checker
 
+The shared binary tape format stores each unary-index mark as `true`. At the
+source-machine boundary, a present bit is decoded to `some ()`; `none` stays
+blank. This internal encoding does not change the native `Unit` index alphabet.
+
 Seven tapes hold `x`, `y`, a unary index, the two hash work tapes, and the
 two hash outputs. Parsing checks canonical binary pairs, positive equal
 lengths, and distinctness before either hash computation starts. Hash
@@ -99,7 +103,7 @@ def collisionTransition (q : CollisionPhase M.states M.symbols) (input : Option 
   | .hashWork second q => go (.hashInput second q cell.work)
   | .hashInput second q work => go (.hashIndex second q work cell.bit origin)
   | .hashIndex second q work input inputOrigin =>
-      match M.transition q input none cell.bit work with
+      match M.transition q input none (cell.bit.map fun _ => ()) work with
       | .accept => go (if second then .resetOutput false else .resetIndex)
       | .reject | .readRandom _ _ => .reject
       | .step next write wm im _ ix emit =>

@@ -11,7 +11,9 @@ import Mathlib.Data.Fintype.Option
 The physical work tape has five tracks: the source work symbol, the origin,
 the unary index, the virtual index head, and the source work head. The routine
 scans to the index head to select a source instruction, updates the index head,
-and returns to the source work head to execute the work/output part.
+and returns to the source work head to execute the work/output part. The `live`
+Boolean is an internal occupancy flag, decoded to `some ()` or `none` when
+calling the source machine.
 
 The transition table inspects one finite symbol at a time. In particular, the
 virtual index length and head positions do not occur in finite control. This
@@ -97,7 +99,7 @@ def virtualIndexTransition (phase : IndexPhase O M.states M.symbols)
       else silent phase (if negative then .right else .left)
   | .toIndex q negative cached =>
       if !cell.indexHead then silent phase .right
-      else match M.transition q none none (if cell.live then some true else none) cached with
+      else match M.transition q none none (if cell.live then some () else none) cached with
         | .accept => .accept
         | .reject => .reject
         | .readRandom no yes => .readRandom

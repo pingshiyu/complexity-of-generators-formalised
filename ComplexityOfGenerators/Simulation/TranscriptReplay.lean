@@ -25,7 +25,7 @@ def transcriptControl : Option (Fin M.states) ≃ Fin (Fintype.card (Option (Fin
   Fintype.equivFin _
 
 def transcriptInstruction (q : Option (Fin M.states)) (input : Option I)
-    (auxiliary index : Option Bool) (work : Option (Fin M.symbols)) :
+    (auxiliary : Option Bool) (index : Option Unit) (work : Option (Fin M.symbols)) :
     Instruction O (Fintype.card (Option (Fin M.states))) M.symbols :=
   match q with
   | none => match auxiliary with

@@ -17,13 +17,13 @@ variable {I A O : Type} (M : Machine I A O)
 inductive AcceptingTranscript (data : InputData I A) : Configuration M → BitString → List O → Prop
   | accept (c : Configuration M) (suffix : BitString)
       (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) = .accept) :
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) = .accept) :
       AcceptingTranscript data c suffix c.output
   | step (c : Configuration M) (bit : Bool) (tail : BitString) (out : List O)
       (state : Fin M.states) (write : Option (Fin M.symbols))
       (work input auxiliary index : Move) (emit : Option O)
       (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
         .step state write work input auxiliary index emit)
       (rest : AcceptingTranscript data
         (M.stepConfiguration data c state write work input auxiliary index emit) tail out) :
@@ -31,7 +31,7 @@ inductive AcceptingTranscript (data : InputData I A) : Configuration M → BitSt
   | random (c : Configuration M) (bit : Bool) (tail : BitString) (out : List O)
       (no yes : Fin M.states)
       (action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-        (if c.indexHead < data.index then some true else none) (c.work c.workHead) = .readRandom no yes)
+        (if c.indexHead < data.index then some () else none) (c.work c.workHead) = .readRandom no yes)
       (rest : AcceptingTranscript data {c with state := if bit then yes else no, randomHead := 0} tail out) :
       AcceptingTranscript data c (bit :: tail) out
 
@@ -77,7 +77,7 @@ private theorem transcript_of_accepting_observation (data : InputData I A) (bits
     (c : Configuration M) (out : List O) (accepted : M.observe data bits c = .halted (.accepted out)) :
     M.AcceptingTranscript data (M.resetRandom c) [] out := by
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept =>
       have equal : c.output = out := by simpa [observe, action] using accepted
       rw [← equal]
@@ -112,7 +112,7 @@ theorem acceptingTranscript_of_runFrom (data : InputData I A) (bits : BitString)
           rw [M.runFrom_shift data bits c d observation step t] at accepted
           obtain ⟨trace, length, continuation⟩ := ih d accepted
           cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-              (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+              (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
           | accept => simp [observe, action] at observation
           | reject => simp [observe, action] at observation
           | step state write work input auxiliary index emit =>

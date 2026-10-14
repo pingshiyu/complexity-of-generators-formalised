@@ -129,7 +129,7 @@ theorem boot_copy_step (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
     (some (bootEncode alphabet input[k])) .right .right .stay .stay none
   have instruction : M.transition target.state input[target.inputHead]?
       (decisionData input).auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < (decisionData input).index then some true else none)
+      (if target.indexHead < (decisionData input).index then some () else none)
       (target.work target.workHead) = .step (bootState 2)
         (some (bootEncode alphabet input[k])) .right .right .stay .stay none := by
     simp [M, postMachine, bootTransition, state, inputHead, bootState, available]
@@ -155,12 +155,12 @@ theorem boot_copy_initial (program : TM0.Machine Γ Q) (control : Q ≃ Fin stat
     (some (Fin.last symbols)) .right .stay .stay .stay none
   have initialInstruction : M.transition initial.state input[initial.inputHead]?
       (decisionData input).auxiliary[initial.auxiliaryHead]?
-      (if initial.indexHead < (decisionData input).index then some true else none)
+      (if initial.indexHead < (decisionData input).index then some () else none)
       (initial.work initial.workHead) =
         .step (bootState 1) none .left .stay .stay .stay none := by rfl
   have markingInstruction : M.transition marking.state input[marking.inputHead]?
       (decisionData input).auxiliary[marking.auxiliaryHead]?
-      (if marking.indexHead < (decisionData input).index then some true else none)
+      (if marking.indexHead < (decisionData input).index then some () else none)
       (marking.work marking.workHead) =
         .step (bootState 2) (some (Fin.last symbols)) .right .stay .stay .stay none := by rfl
   have initialObservation := M.observe_step (decisionData input) bits initial _ _ _ _ _ _ _
@@ -268,7 +268,7 @@ theorem boot_rewind_start (program : TM0.Machine Γ Q) (control : Q ≃ Fin stat
     none .left .stay .stay .stay none
   have instruction : M.transition copying.state input[copying.inputHead]?
       (decisionData input).auxiliary[copying.auxiliaryHead]?
-      (if copying.indexHead < (decisionData input).index then some true else none)
+      (if copying.indexHead < (decisionData input).index then some () else none)
       (copying.work copying.workHead) = .step (bootState 3) none .left .stay .stay .stay none := by
     simp [M, postMachine, bootTransition, state, inputHead, bootState]
   have next := M.next_step (decisionData input) bits copying _ _ _ _ _ _ _ instruction
@@ -301,7 +301,7 @@ theorem boot_rewind_complete (program : TM0.Machine Γ Q) (control : Q ≃ Fin s
         none .right .stay .stay .stay none
       have instruction : M.transition target.state input[target.inputHead]?
           (decisionData input).auxiliary[target.auxiliaryHead]?
-          (if target.indexHead < (decisionData input).index then some true else none)
+          (if target.indexHead < (decisionData input).index then some () else none)
           (target.work target.workHead) =
             .step (bootControl control default) none .right .stay .stay .stay none := by
         simp [M, postMachine, bootTransition, state, bootState, marker]
@@ -325,7 +325,7 @@ theorem boot_rewind_complete (program : TM0.Machine Γ Q) (control : Q ≃ Fin s
         none .left .stay .stay .stay none
       have instruction : M.transition target.state input[target.inputHead]?
           (decisionData input).auxiliary[target.auxiliaryHead]?
-          (if target.indexHead < (decisionData input).index then some true else none)
+          (if target.indexHead < (decisionData input).index then some () else none)
           (target.work target.workHead) = .step (bootState 3) none .left .stay .stay .stay none := by
         simp [M, postMachine, bootTransition, state, bootState]
         exact unmarked

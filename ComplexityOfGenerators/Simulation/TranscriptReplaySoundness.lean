@@ -20,7 +20,7 @@ theorem transcriptReplay_to_trace (input : List I) (n : ℕ) (log : BitString) (
   induction log generalizing c lead with
   | nil =>
       cases action : M.transition c.state input[c.inputHead]? none
-          (if c.indexHead < n then some true else none) (c.work c.workHead) with
+          (if c.indexHead < n then some () else none) (c.work c.workHead) with
       | accept =>
           have same : c.output = out := by
             simpa [Machine.runFrom, Machine.observe, transcriptReplay, transcriptConfiguration,
@@ -38,7 +38,7 @@ theorem transcriptReplay_to_trace (input : List I) (n : ℕ) (log : BitString) (
             transcriptData, transcriptInstruction, action] at accepted
   | cons bit tail ih =>
       cases action : M.transition c.state input[c.inputHead]? none
-          (if c.indexHead < n then some true else none) (c.work c.workHead) with
+          (if c.indexHead < n then some () else none) (c.work c.workHead) with
       | accept =>
           have terminal : (transcriptReplay M).observe (transcriptData input n (lead ++ bit :: tail)) bits
               (transcriptConfiguration M c lead.length) = .halted (.accepted c.output) := by

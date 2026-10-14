@@ -17,7 +17,7 @@ theorem collision_hash_terminal (word : BitString) (second : Bool) (frame)
       {hashBankConfiguration M second frame source with
         state := if second then .resetOutput false else .resetIndex} := by
   cases action : M.transition source.state input[source.inputHead]? none
-      (if source.indexHead < n then some true else none) (source.work source.workHead) with
+      (if source.indexHead < n then some () else none) (source.work source.workHead) with
   | accept =>
       exact ⟨by simpa [Machine.observe, action] using observed,
         collision_hash_accept M word second frame source input n bound inputTape indexTape action⟩
@@ -57,12 +57,12 @@ theorem collision_hash_runFrom (deterministic : M.Deterministic)
           have same := M.observe_running_eq _ [] source current observation
           subst current
           cases action : M.transition source.state input[source.inputHead]? none
-              (if source.indexHead < n then some true else none) (source.work source.workHead) with
+              (if source.indexHead < n then some () else none) (source.work source.workHead) with
           | accept => simp [Machine.observe, action] at observation
           | reject => simp [Machine.observe, action] at observation
           | readRandom no yes =>
               have impossible := deterministic source.state input[source.inputHead]? none
-                (if source.indexHead < n then some true else none) (source.work source.workHead)
+                (if source.indexHead < n then some () else none) (source.work source.workHead)
               simp [action] at impossible
           | step next write wm im am ix emit =>
               let nextSource := M.stepConfiguration {input := input, index := n} source next write wm im am ix emit

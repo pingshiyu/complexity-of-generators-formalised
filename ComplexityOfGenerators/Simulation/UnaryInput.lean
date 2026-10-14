@@ -4,7 +4,8 @@ import ComplexityOfGenerators.Foundations.RandomTape
 # Interchanging a unary ordinary input and the family index
 
 This adapter changes the finite transition table and exchanges the two read-only
-heads. It preserves every primitive transition, the random tape, the work tape,
+heads. Both interfaces use `Option Unit`, so observed symbols are exchanged
+directly. It preserves every primitive transition, the random tape, the work tape,
 and the output. In particular, a loader for `List Unit` can run directly on a
 generator's physical unary index tape; no arithmetic on an unbounded index is
 performed inside a machine instruction.
@@ -29,8 +30,7 @@ def unarySwapMachine : Machine Unit A O where
   symbols := M.symbols
   initial := M.initial
   transition := fun state input auxiliary index work =>
-    unarySwapInstruction M (M.transition state (index.map fun _ => ()) auxiliary
-      (input.map fun _ => true) work)
+    unarySwapInstruction M (M.transition state index auxiliary input work)
 
 def unarySwapData (data : InputData Unit A) : InputData Unit A where
   input := List.replicate data.index ()
@@ -62,11 +62,11 @@ private theorem unarySwap_symbols (data : InputData Unit A) (c : Configuration M
     (unarySwapMachine M).transition (unarySwapConfiguration M c).state
       (unarySwapData data).input[(unarySwapConfiguration M c).inputHead]?
       (unarySwapData data).auxiliary[(unarySwapConfiguration M c).auxiliaryHead]?
-      (if (unarySwapConfiguration M c).indexHead < (unarySwapData data).index then some true else none)
+      (if (unarySwapConfiguration M c).indexHead < (unarySwapData data).index then some () else none)
       ((unarySwapConfiguration M c).work (unarySwapConfiguration M c).workHead) =
     unarySwapInstruction M (M.transition c.state data.input[c.inputHead]?
       data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead)) := by
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead)) := by
   simp only [unarySwapMachine, unarySwapConfiguration, unarySwapData, unit_getElem?,
     List.length_replicate]
   by_cases hi : c.inputHead < data.input.length <;>
@@ -77,7 +77,7 @@ theorem unarySwap_observe (data : InputData Unit A) (bits : BitString) (c : Conf
       unarySwapResult M (M.observe data bits c) := by
   simp only [Machine.observe, unarySwap_symbols]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | readRandom no yes =>
@@ -90,7 +90,7 @@ theorem unarySwap_next (data : InputData Unit A) (bits : BitString) (c : Configu
       unarySwapResult M (M.next data bits c) := by
   simp only [Machine.next, unarySwap_symbols]
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | readRandom no yes =>
@@ -139,9 +139,9 @@ theorem unarySwap_produces_iff (data : InputData Unit A) (bits : BitString) (wor
 theorem unarySwap_deterministic (deterministic : M.Deterministic) :
     (unarySwapMachine M).Deterministic := by
   intro state input auxiliary index work
-  have h := deterministic state (index.map fun _ => ()) auxiliary (input.map fun _ => true) work
+  have h := deterministic state index auxiliary input work
   simp only [unarySwapMachine]
-  cases action : M.transition state (index.map fun _ => ()) auxiliary (input.map fun _ => true) work <;>
+  cases action : M.transition state index auxiliary input work <;>
     simp_all [unarySwapInstruction]
 
 @[simp] theorem unarySwap_decisionData (n : ℕ) :

@@ -89,7 +89,7 @@ def denoteFiniteResult : FiniteResult M → RunState M
 def finiteInstruction (data : InputData I A) (c : FiniteConfiguration M) :
     Instruction O M.states M.symbols :=
   M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-    (if c.indexHead < data.index then some true else none) (c.work.lookup c.workHead)
+    (if c.indexHead < data.index then some () else none) (c.work.lookup c.workHead)
 
 def finiteObserve (data : InputData I A) (bits : BitString) (c : FiniteConfiguration M) :
     FiniteResult M :=
@@ -138,7 +138,7 @@ theorem finiteObserve_denote (data : InputData I A) (bits : BitString)
     denoteFiniteResult M (finiteObserve M data bits c) = M.observe data bits c.denote := by
   have instruction : M.transition c.denote.state data.input[c.denote.inputHead]?
       data.auxiliary[c.denote.auxiliaryHead]?
-      (if c.denote.indexHead < data.index then some true else none)
+      (if c.denote.indexHead < data.index then some () else none)
       (c.denote.work c.denote.workHead) = finiteInstruction M data c := rfl
   simp only [finiteObserve, Machine.observe, instruction]
   cases finiteInstruction M data c <;> try rfl
@@ -150,7 +150,7 @@ theorem finiteNext_denote (data : InputData I A) (bits : BitString)
     denoteFiniteResult M (finiteNext M data bits c) = M.next data bits c.denote := by
   have instruction : M.transition c.denote.state data.input[c.denote.inputHead]?
       data.auxiliary[c.denote.auxiliaryHead]?
-      (if c.denote.indexHead < data.index then some true else none)
+      (if c.denote.indexHead < data.index then some () else none)
       (c.denote.work c.denote.workHead) = finiteInstruction M data c := rfl
   simp only [finiteNext, Machine.next, instruction]
   cases finiteInstruction M data c with

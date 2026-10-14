@@ -44,7 +44,7 @@ theorem collisionIndex_loaded (n : ℕ) (bits : BitString) :
     none .right .stay .stay .stay none
   have markerTable : L.transition marker.state data.input[marker.inputHead]?
       data.auxiliary[marker.auxiliaryHead]?
-      (if marker.indexHead < data.index then some true else none) (marker.work marker.workHead) =
+      (if marker.indexHead < data.index then some () else none) (marker.work marker.workHead) =
       .step (blockControl (collisionIndexBlocks M) (.run ((Fintype.equivFin Unit) ())))
         none .right .stay .stay .stay none := by
     simp [L, indexLoader, blockMachine, blockTransition, markerState, markerRead]
@@ -52,7 +52,7 @@ theorem collisionIndex_loaded (n : ℕ) (bits : BitString) :
   have markerNext := L.next_step data bits marker _ _ _ _ _ _ _ markerTable
   have acceptTable : L.transition sourceReady.state data.input[sourceReady.inputHead]?
       data.auxiliary[sourceReady.auxiliaryHead]?
-      (if sourceReady.indexHead < data.index then some true else none) (sourceReady.work sourceReady.workHead) =
+      (if sourceReady.indexHead < data.index then some () else none) (sourceReady.work sourceReady.workHead) =
       .accept := by
     simp [L, indexLoader, sourceReady, Machine.stepConfiguration, blockMachine, blockTransition,
       indexLoaderProgram, postInstruction]

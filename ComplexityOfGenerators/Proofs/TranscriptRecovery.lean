@@ -11,8 +11,9 @@ This is a concrete native recovery machine for the forward direction of 7.1.
 Its language is exactly the singleton replay output, or empty for an invalid
 certificate. Every recovered word belongs to the source slice, and every source
 word has a positive certificate. For polynomial-time generators, these
-certificates have polynomial length. The matching verifier and transcript
-sampler still need to be assembled into the full certificate scheme.
+certificates have polynomial length. `TranscriptSampling` constructs the
+matching sampler; `TranscriptScheme` assembles both components conditional on
+a correct replay verifier, whose native construction remains unfinished.
 -/
 
 namespace ComplexityOfGenerators
@@ -22,7 +23,7 @@ open Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} [Fintype α]
+variable {α : Type}
 
 theorem transcriptRecoverer_language (M : Machine Unit Bool α) (n : ℕ) (c : BitString) :
     (transcriptRecoverer M).generatedLanguage (generatorData n c) =
@@ -34,7 +35,7 @@ theorem transcriptRecoverer_language (M : Machine Unit Bool α) (n : ℕ) (c : B
   change (rejectDrain (transcriptReplay M)).generatedLanguage _ = _
   rw [language]
   ext word
-  simp only [Set.mem_setOf_eq, halted]
+  simp only [Set.mem_ofPred_eq, halted]
   cases result <;> simp [eq_comm]
 
 /-- Soundness for all certificates, not just those a sampler happens to emit. -/

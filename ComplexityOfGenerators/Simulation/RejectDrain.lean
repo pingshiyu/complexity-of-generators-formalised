@@ -82,7 +82,7 @@ theorem rejectDrain_observe_running (data : InputData I A) (bits : BitString) (c
   unfold Machine.observe at live
   simp only [Machine.observe, rejectDrain, rejectDrainConfiguration, Equiv.symm_apply_apply]
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [action] at live
   | reject => simp [action] at live
   | step state write work input auxiliary index emit => simp [rejectDrainInstruction]
@@ -99,7 +99,7 @@ theorem rejectDrain_next_running (data : InputData I A) (bits : BitString) (c d 
   unfold Machine.next at step
   simp only [Machine.next, rejectDrain, rejectDrainConfiguration, Equiv.symm_apply_apply]
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => simp [action] at step
   | reject => simp [action] at step
   | step state write work input auxiliary index emit =>
@@ -123,7 +123,7 @@ theorem rejectDrain_terminal (data : InputData I A) (bits : BitString) (c : Conf
       .halted (rejectDrainOutcome result) := by
   unfold Machine.observe at terminal
   cases action : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept =>
       simp only [action, RunState.halted.injEq] at terminal
       subst result

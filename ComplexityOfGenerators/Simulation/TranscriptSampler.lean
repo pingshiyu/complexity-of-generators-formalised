@@ -73,7 +73,7 @@ theorem sampler_helper (data : InputData I A) (bits : BitString) (c : Configurat
     (indexBound : c.indexHead ≤ data.index) (head : c.workHead ∈ c.visited)
     (action : (transcriptSampler M).transition (samplerControl M phase)
       data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
       .step (samplerControl M (.execute c.state)) none .stay .stay .stay .stay emit) :
     let start := samplerConfiguration M c log phase
     let finish := samplerConfiguration M c (log ++ emit.toList)

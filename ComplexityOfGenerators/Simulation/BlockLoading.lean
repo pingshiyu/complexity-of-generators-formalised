@@ -63,7 +63,7 @@ theorem block_write (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
     (some (bootEncode alphabet symbol)) .right .stay .stay .stay none
   have transition : M.transition target.state input[target.inputHead]?
       (decisionData input).auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < (decisionData input).index then some true else none)
+      (if target.indexHead < (decisionData input).index then some () else none)
       (target.work target.workHead) = .step (blockControl blocks nextPhase)
         (some (bootEncode alphabet symbol)) .right .stay .stay .stay none := by
     simpa [M, blockMachine, state, inputHead] using instruction
@@ -95,7 +95,7 @@ theorem block_skip (program : TM0.Machine Γ Q) (control : Q ≃ Fin states)
     none .stay inputMove .stay .stay none
   have transition : M.transition target.state input[target.inputHead]?
       (decisionData input).auxiliary[target.auxiliaryHead]?
-      (if target.indexHead < (decisionData input).index then some true else none)
+      (if target.indexHead < (decisionData input).index then some () else none)
       (target.work target.workHead) = .step (blockControl blocks nextPhase) none .stay inputMove .stay .stay none := by
     simpa [M, blockMachine, state, inputHead] using instruction
   have observation := M.observe_step (decisionData input) bits target _ _ _ _ _ _ _ transition

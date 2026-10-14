@@ -1,6 +1,6 @@
 import ComplexityOfGenerators.Simulation.RejectDrain
 import ComplexityOfGenerators.Simulation.TranscriptReplay
-import ComplexityOfGenerators.Proofs.GeneratorSupport
+import ComplexityOfGenerators.Proofs.GeneratorCriteria
 import ComplexityOfGenerators.Foundations.BoundedGeneration
 
 /-!
@@ -80,32 +80,25 @@ theorem rejectDrain_language :
       obtain ⟨word', impossible⟩ := (rejectDrain_accepts_iff M deterministic data t _ source bits).mp ⟨word, accepted⟩
       cases impossible
 
+/-- Acceptance of the drained deterministic computation is independent of the
+random tape and detects exactly whether its output language is nonempty. -/
+theorem rejectDrain_fullTrial (bits : BitString) :
+    (rejectDrain M).Accepts data bits ↔ ((rejectDrain M).generatedLanguage data).Nonempty := by
+  rw [rejectDrain_accepts_iff M deterministic data t result source bits,
+    rejectDrain_language M deterministic data t result source]
+  cases result <;> simp
+
 theorem rejectDrain_isGenerator : (rejectDrain M).IsGenerator data := by
-  refine ⟨⟨?_, ?_⟩, ?_⟩
-  · intro bits
-    exact ⟨t + bits.length, _, rejectDrain_deterministic_run M deterministic data t result source bits⟩
-  · intro bits time rejected
-    have same := (rejectDrain M).halted_outcome_unique data bits time _ _ _ rejected
-      (rejectDrain_deterministic_run M deterministic data t result source bits)
-    cases result <;> cases same
-  · cases result with
-    | accepted word =>
-        have all : (rejectDrain M).acceptedStreams data = Set.univ := by
-          apply Set.eq_univ_of_forall
-          intro stream
-          refine ⟨[], by simp [cylinder], ?_⟩
-          exact (rejectDrain_accepts_iff M deterministic data t _ source []).mpr ⟨word, rfl⟩
-        exact Or.inl (by rw [all]; exact MeasureTheory.measure_univ)
-    | rejected =>
-        apply Or.inr
-        have empty := (rejectDrain M).acceptedStreams_eq_empty_iff data
-        rw [empty.mpr (rejectDrain_language M deterministic data t _ source)]
-        exact MeasureTheory.measure_empty
-    | exhausted =>
-        apply Or.inr
-        have empty := (rejectDrain M).acceptedStreams_eq_empty_iff data
-        rw [empty.mpr (rejectDrain_language M deterministic data t _ source)]
-        exact MeasureTheory.measure_empty
+  apply Machine.isGenerator_of_full_trials _ _ 0
+  · constructor
+    · intro bits
+      exact ⟨t + bits.length, _, rejectDrain_deterministic_run M deterministic data t result source bits⟩
+    · intro bits time rejected
+      have same := (rejectDrain M).halted_outcome_unique data bits time _ _ _ rejected
+        (rejectDrain_deterministic_run M deterministic data t result source bits)
+      cases result <;> cases same
+  · intro bits _
+    exact rejectDrain_fullTrial M deterministic data t result source bits
 
 theorem rejectDrain_trialBound (seed : ℕ) :
     (rejectDrain M).GeneratorTimeBound data seed (t + seed) := by
@@ -116,9 +109,7 @@ theorem rejectDrain_trialBound (seed : ℕ) :
     have padded := (rejectDrain M).run_halted_add data bits (t + bits.length) _ halted (seed - bits.length)
     simpa only [Nat.add_assoc, Nat.add_sub_of_le length] using padded
   · intro bits _
-    rw [rejectDrain_accepts_iff M deterministic data t result source bits,
-      rejectDrain_language M deterministic data t result source]
-    cases result <;> simp
+    exact rejectDrain_fullTrial M deterministic data t result source bits
 
 omit deterministic source
 

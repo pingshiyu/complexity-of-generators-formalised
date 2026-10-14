@@ -15,7 +15,7 @@ variable {I A O : Type} [Primcodable I] [Primcodable A] [Primcodable O]
 variable (M : Machine I A O)
 
 theorem primrec_transition : Primrec (fun p : Fin M.states × Option I × Option A ×
-    Option Bool × Option (Fin M.symbols) => M.transition p.1 p.2.1 p.2.2.1 p.2.2.2.1 p.2.2.2.2) :=
+    Option Unit × Option (Fin M.symbols) => M.transition p.1 p.2.1 p.2.2.1 p.2.2.2.1 p.2.2.2.2) :=
 by
   let : Finite I := M.inputFinite
   let : Finite A := M.auxiliaryFinite
@@ -26,7 +26,7 @@ theorem primrec_finiteInstruction : Primrec (fun p : InputData I A × FiniteConf
     finiteInstruction M p.1 p.2) := by
   have arguments : Primrec (fun p : InputData I A × FiniteConfiguration M =>
       (p.2.state, p.1.input[p.2.inputHead]?, p.1.auxiliary[p.2.auxiliaryHead]?,
-        if p.2.indexHead < p.1.index then some true else none, p.2.work.lookup p.2.workHead)) := by
+        if p.2.indexHead < p.1.index then some () else none, p.2.work.lookup p.2.workHead)) := by
     apply Primrec.pair (primrec_config_state M |>.comp .snd)
     apply Primrec.pair
       (Primrec.list_getElem?.comp (primrec_data_input.comp .fst)
@@ -37,7 +37,7 @@ theorem primrec_finiteInstruction : Primrec (fun p : InputData I A × FiniteConf
     apply Primrec.pair
     · exact Primrec.ite
         (Primrec.nat_lt.comp (primrec_config_indexHead M |>.comp .snd) (primrec_data_index.comp .fst))
-        (.const (some true)) (.const none)
+        (.const (some ())) (.const none)
     · exact Primrec.listLookup.comp (primrec_config_workHead M |>.comp .snd)
         (primrec_config_work M |>.comp .snd)
   exact (primrec_transition M).comp arguments

@@ -6,9 +6,9 @@ import ComplexityOfGenerators.Proofs.BinaryCollisionFinder
 /-!
 # Native complement facts and the final closure contradictions in 7.2
 
-The fallback reduction below explicitly takes the two generator memberships
-that still require native constructions. It is not a replacement for the main
-theorem, nor an assumption asserting those constructions.
+The fallback reduction below takes two explicit generator memberships. Their
+native constructions are proved in `FallbackGeneration` and used by the
+completed nonclosure proofs in `GeneratorNonclosure`.
 -/
 
 namespace ComplexityOfGenerators
@@ -29,8 +29,8 @@ theorem pg_subset_coNP_of_complement_closed {α : Type} [Fintype α]
   intro L member
   exact pg_subset_np (closed L member)
 
-/-- The algebraic end of the intersection argument. The remaining constructive
-task is to generate the two unions with their disjoint constant-bit fallbacks. -/
+/-- The algebraic end of the intersection argument, applied to the native
+generators constructed in `FallbackGeneration`. -/
 theorem not_intersection_closed_of_fallbacks (L : Language Bool)
     (zero : L ∪ constantBitLanguage false ∈ PG Bool)
     (one : L ∪ constantBitLanguage true ∈ PG Bool) (outside : L ∉ PG Bool) :

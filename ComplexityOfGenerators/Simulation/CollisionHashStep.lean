@@ -18,7 +18,7 @@ theorem collision_hash_work_step (word : BitString) (second : Bool) (frame)
     (inputBound : source.inputHead ≤ input.length) (indexBound : source.indexHead ≤ n)
     (next : Fin M.states) (write : Option (Fin M.symbols)) (wm im am ix : Move) (emit : Option Bool)
     (table : M.transition source.state input[source.inputHead]? none
-      (if source.indexHead < n then some true else none) (source.work source.workHead) =
+      (if source.indexHead < n then some () else none) (source.work source.workHead) =
       .step next write wm im am ix emit) :
     (collisionBank M).Steps word
       {hashBankConfiguration M second frame source with

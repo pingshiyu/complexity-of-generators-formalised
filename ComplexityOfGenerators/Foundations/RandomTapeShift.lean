@@ -19,7 +19,7 @@ theorem observe_shift_random (data : InputData I A) (lead bits : BitString) (c :
       M.shiftRandomResult lead (M.observe data bits c) := by
   unfold observe shiftRandomConfiguration
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) <;>
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) <;>
     simp only [shiftRandomResult, shiftRandomConfiguration, List.length_append, Nat.add_lt_add_iff_left]
   split_ifs <;> rfl
 
@@ -28,7 +28,7 @@ theorem next_shift_random (data : InputData I A) (lead bits : BitString) (c : Co
       M.shiftRandomResult lead (M.next data bits c) := by
   unfold next shiftRandomConfiguration
   cases M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) with
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
   | step state write work input auxiliary index emit => rfl

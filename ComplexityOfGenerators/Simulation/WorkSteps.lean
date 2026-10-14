@@ -55,7 +55,7 @@ theorem workStep_frame (data : InputData I A) (c : Configuration M)
 theorem workStep_run (data : InputData I A) (bits : BitString) (c : Configuration M)
     (state : Fin M.states) (write : Option (Fin M.symbols)) (move : Move)
     (table : M.transition c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
-      (if c.indexHead < data.index then some true else none) (c.work c.workHead) =
+      (if c.indexHead < data.index then some () else none) (c.work c.workHead) =
         .step state write move .stay .stay .stay none) :
     M.runFrom data bits c 1 = M.observe data bits (workStep M data c state write move) :=
   M.runFrom_shift data bits c _ (M.observe_step data bits c _ _ _ _ _ _ _ table)
