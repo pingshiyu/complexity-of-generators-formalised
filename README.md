@@ -23,9 +23,12 @@ under complement; independently, collision-resistant hashes imply that `PG` is
 not closed under intersection. Both proofs use native machines and verified
 polynomial bounds.
 
-Only Theorem 6.1 remains unfinished and contains `sorry`. All supporting lemmas
-have complete proofs; no custom axioms are introduced. A successful build does
-not establish Theorem 6.1.
+**Theorem 6.1 is completely proved:** `PSPACEG α = PSPACE α` for every finite
+alphabet. The forward direction implements the paper's Savitch configuration-graph
+search in the retained native model; the reverse direction implements its cyclic
+generator construction. Both use actual visited-cell space bounds. All five
+main theorems and their supporting lemmas have complete proofs, with no `sorry`
+or custom axioms.
 
 **Theorem 7.1 uses two user-approved corrections to the certificate definitions:**
 certified instances may be empty words, and every sampled certificate must
@@ -54,9 +57,8 @@ lake build
 lake env lean scripts/AuditFoundations.lean
 ```
 
-Import `ComplexityOfGenerators` to obtain the entire development. The compiler
-will report one expected `declaration uses 'sorry'` warning for Theorem 6.1. Upstream VCVio
-also emits deprecation warnings. The first build compiles the imported
+Import `ComplexityOfGenerators` to obtain the entire development. No local
+unfinished-proof warning is expected. Upstream VCVio emits deprecation warnings. The first build compiles the imported
 Complexitylib and VCVio modules that are not covered by Mathlib's cache.
 
 The root Lake post-update hook applies a small, verbatim upstream proof
@@ -65,9 +67,9 @@ statements or definitions; see [patches/README.md](patches/README.md). Lake's
 warning that Complexitylib has local changes refers to this recorded backport.
 
 Import `ComplexityOfGenerators.Foundations` to use the supporting development
-without importing the unfinished main theorems. The audit traverses the axiom
-dependencies of every declaration in those local modules, including the imported
-proofs they use, and explicitly checks the completed main Theorems 3.1, 5.1, 7.1 and 7.2.
+without importing the main theorem statements. The audit traverses the axiom
+dependencies of every local declaration, including the imported proofs they use
+and all five main theorems. No declaration is excluded.
 It rejects `sorryAx`, custom axioms and unchecked evaluation
 axioms; only `propext`, `Classical.choice` and `Quot.sound` are allowed.
 
@@ -91,7 +93,7 @@ quantifiers. It does not add keyed hashing, nonuniform circuits or a new securit
 assumption. VCVio's imported game-reduction and polynomial-loss lemmas are then
 available for subsequent cryptographic reductions.
 
-### Completed proof components and remaining obligations
+### Proof components
 
 The proof development contains these checked components:
 
@@ -183,11 +185,204 @@ The imported Savitch result proves polynomial-space class equality for
 Complexitylib's machines. The native tape geometry and finite configuration
 encoding are now verified, as is native `P ⊆ PSPACE` in
 [NativeSpaceContainment.lean](ComplexityOfGenerators/Proofs/NativeSpaceContainment.lean).
-The space-preserving simulations needed to apply Savitch to Theorem 6.1 remain
-unfinished. No quantitative `s²` bound for the local machine, or
-oracle-relativised result, is claimed. Polynomial-space generator constructions
-remain unfinished. The source issues and approved definition corrections are
-recorded below.
+[SpaceReachability.lean](ComplexityOfGenerators/Foundations/SpaceReachability.lean)
+now proves exact correspondence between native acceptance and reachability in the
+finite configuration graph. Every graph path is realized by a finite random tape;
+[ExecutionPaths.lean](ComplexityOfGenerators/Foundations/ExecutionPaths.lean)
+includes terminal successor configurations in the space accounting.
+[SpaceCodeExecution.lean](ComplexityOfGenerators/Foundations/SpaceCodeExecution.lean)
+provides effective transitions on finite codes, with proved encoding/decoding and
+edge correspondence. No equality test on an infinite work tape is required.
+
+[FiniteReachability.lean](ComplexityOfGenerators/Foundations/FiniteReachability.lean)
+proves the vertex-count bound on path length and correctness of the Boolean
+midpoint recursion. [SpaceSearch.lean](ComplexityOfGenerators/Foundations/SpaceSearch.lean)
+applies this executable Lean search to the native configuration codes.
+[OutputMatcherSpace.lean](ComplexityOfGenerators/Simulation/OutputMatcherSpace.lean)
+proves that streaming output comparison preserves the exact work-space bound.
+[PolynomialSpaceSearch.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceSearch.lean)
+then gives a correct search for every polynomial-space generator's language,
+with an explicit polynomial recursion-depth bound, including empty words and
+empty slices.
+
+[FixedWidthCodec.lean](ComplexityOfGenerators/Foundations/FixedWidthCodec.lean)
+and [SpaceCodeBits.lean](ComplexityOfGenerators/Foundations/SpaceCodeBits.lean)
+encode configuration fields individually in a bitstring of polynomial width.
+Their base tests inspect only the endpoints and the two possible native
+successors. [SavitchStack.lean](ComplexityOfGenerators/Foundations/SavitchStack.lean)
+connects this graph to Complexitylib's verified Savitch stack interpreter,
+reusing its midpoint counter, termination proof, and serialized-state bound.
+Invalid encodings cannot introduce accepting paths. If configuration width is
+at most recursion depth `d`, every serialized stack state has at most
+`44 * (d + 1)^2` bits.
+[PolynomialSpaceStack.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceStack.lean)
+proves that this interpreter halts with the correct generator-membership answer
+and has a uniform polynomial bound on its serialized states, even when source
+branches loop. These results use the existing native generator assumptions.
+The recursive finite-control program, input/root initializer, and complete
+configuration-graph base program are implemented and connected to this
+interpreter. The stack-to-native compiler converts their bounded traces into
+actual visited-cell bounds, completing the machine-space containment.
+
+The reusable space-preserving tape-bank compiler is now proved in
+[TransducerBank/Space.lean](ComplexityOfGenerators/Simulation/TransducerBank/Space.lean).
+A terminating finite tape-bank program whose reachable heads have radius `r`
+compiles to the retained native machine using at most `2*r+1` visited work cells.
+This bound covers initialization, scans, random reads, writes, and terminal
+successors; it has no time-bound or random-tape-length premise.
+[ExecutionRegions.lean](ComplexityOfGenerators/Foundations/ExecutionRegions.lean)
+justifies bounding every execution prefix by its terminal visited set.
+[NativeSpaceCompilation.lean](ComplexityOfGenerators/Proofs/NativeSpaceCompilation.lean)
+packages actual deterministic bank programs with polynomial head bounds as
+native `PSPACE` deciders.
+
+[StackSpace/Native.lean](ComplexityOfGenerators/Simulation/StackSpace/Native.lean)
+now provides an end-to-end, space-preserving compiler from Mathlib's finite
+`TM2` programs with a common stack alphabet to the retained native model. The
+compiler executes each
+push, pop, peek, branch, local update and jump using an actual finite transition
+table. Each stack is stored bottom-to-top; pops erase removed cells. The proof
+covers input loading, acceptance and rejection, and every intermediate compiler
+phase. If source stacks have length at most `s`, each source step stays within
+tape-bank radius `s + C`, where `C` depends only on the fixed program text.
+Arbitrarily many steps reuse that region. `StackSpace.mem_pspace` packages a
+terminating source program with polynomially bounded stacks as a native
+`PSPACE` decider. `StackSpace.mem_pspace_of_trace` permits the same conclusion
+from compositional bounded execution traces.
+
+[SavitchMachine/Counter.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Counter.lean)
+implements the midpoint increment and overflow flag as a finite Mathlib stack
+program, proves exact agreement with Complexitylib's `bumpBits` and `bumpOver`,
+and compiles its execution to the native single-work-tape machine with a fixed
+region bound. This includes empty counters and overflow. These completed
+compiler and counter results do not by themselves prove the forward inclusion.
+
+[SavitchMachine/Program.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Program.lean)
+now supplies the finite recursive control table: child-frame construction,
+both return branches, midpoint increments and overflow, frame popping, and
+final halting. Its six frame columns and six scratch registers are manipulated
+by checked cell-by-cell copy, transfer, comparison, and erasure loops.
+[Execution.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Execution.lean)
+proves agreement with each active library step and every finite execution.
+[WithInput.lean](ComplexityOfGenerators/Simulation/SavitchMachine/WithInput.lean)
+extends this program with a persistent input stack, whose length is also
+charged to the space bound. Recursive routines preserve it.
+
+[PolynomialSpaceFrames.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceFrames.lean)
+proves that the actual generator search satisfies the column bound and exact
+midpoint-width invariant.
+[PolynomialSpaceExecution.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceExecution.lean)
+connects the recursive program to the correct generator-membership answer,
+with an explicit obligation for the configuration-graph base-test subprogram.
+The configuration-graph base subprogram remains to be implemented. It is not
+hidden in a new assumption of Theorem 6.1. Input initialization and native
+compilation are now supplied by the modules below.
+
+The concrete constant-predicate base subprogram is proved correct and used in
+[scripts/CheckSavitchMachine.lean](scripts/CheckSavitchMachine.lean) to execute
+the complete recursive table. The checks cover both answers, zero-width
+midpoints, overflow, nested recursion, scratch cleanup, and input preservation.
+Run them with `lake env lean scripts/CheckSavitchMachine.lean`.
+
+[SavitchMachine/Ruler.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Ruler.lean)
+implements polynomial ruler initialization as a finite program. It preserves
+the input and constructs `c * (n + 1)^d` using unary counters, verified copying
+loops and multiplication. Its bound includes the factor `n + 1`, which can
+exceed a constant polynomial. The same script checks empty inputs, constant
+bounds and repeated multiplication.
+
+[Initialize.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Initialize.lean)
+now composes the input loader, polynomial rulers, native initial-configuration
+encoder and root-frame assembler into one finite program, with a proved
+polynomial bound. It supports arbitrary input letters using a disjoint work
+alphabet. [PolynomialSpaceInitialization.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceInitialization.lean)
+proves that its endpoint is exactly `generatorStackRun … 0`.
+[PolynomialSpaceDecision.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceDecision.lean)
+then joins initialization to recursive search and compiles the entire program
+into the retained single-work-tape model. Its theorem
+`generator_language_mem_pspace_of_base` has one explicit implementation premise:
+a finite configuration-graph base program with the specified correctness and
+space bound. That program has not yet been constructed.
+
+[CoordinateDecode.lean](ComplexityOfGenerators/Simulation/SavitchMachine/CoordinateDecode.lean)
+implements the existing fixed-width coordinate codec, including wrong-length
+and out-of-range rejection. It clamps after each binary digit so malformed
+midpoints cannot allocate exponential unary storage. The unary-to-binary
+encoder reuses Complexitylib's verified counter. The general stack routine
+embedding and alphabet transport preserve space bounds, and the native input
+adapter preserves the exact visited-cell set, including terminal successors.
+
+The native configuration-test components now include sequential field reading,
+affine header lookup, input and unary-index observations, work-head and tape
+validation, clamped read-only head movement, strict work-head movement, and
+single-cell tape-update comparison. In particular,
+[ConfigurationHeader.lean](ComplexityOfGenerators/Simulation/SavitchMachine/ConfigurationHeader.lean)
+connects the composed header reader and head comparison to the existing typed
+configuration codec. [WorkObservation.lean](ComplexityOfGenerators/Simulation/SavitchMachine/WorkObservation.lean)
+composes head decoding, window location and cell validation, preserving the
+original input even on rejection.
+[SpaceCodeLocal.lean](ComplexityOfGenerators/Foundations/SpaceCodeLocal.lean)
+proves that native graph edges are exactly the corresponding local state,
+head and work-array comparisons.
+[PolynomialSpaceBaseBounds.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceBaseBounds.lean)
+shows that their coordinate counters, header offsets and window storage fit
+the already chosen polynomial stack bound. All these are completed proofs,
+with no additional axioms or unfinished sublemmas.
+
+Endpoint loading and cache cleanup preserve suspended parent frames and the
+persistent input. [BooleanTest.lean](ComplexityOfGenerators/Simulation/SavitchMachine/BooleanTest.lean)
+composes these restorative tests without additional registers.
+[ObservationQueries.lean](ComplexityOfGenerators/Simulation/SavitchMachine/ObservationQueries.lean)
+implements acceptance leaves, and [EdgeQueries.lean](ComplexityOfGenerators/Simulation/SavitchMachine/EdgeQueries.lean)
+implements equality or one native transition, including malformed-code rejection.
+[GraphBase.lean](ComplexityOfGenerators/Simulation/SavitchMachine/GraphBase.lean)
+selects the appropriate test and removes the completed frame.
+[PolynomialSpaceBase.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceBase.lean)
+discharges `generator_language_mem_pspace_of_base` and proves `pspaceg_subset_pspace`.
+
+Acceptance leaves test their current configuration; reachability leaves allow
+zero or one edge. The verified acceptance recursion therefore covers paths of
+length at most `2^depth - 1`. The sharpened finite-graph bound proves that every
+reachable vertex has a path shorter than the vertex count, so the existing
+polynomial recursion depth suffices. This is an implementation choice within
+Savitch's argument, with no change to Theorem 6.1 or the native complexity classes.
+[scripts/CheckConfigurationTests.lean](scripts/CheckConfigurationTests.lean)
+executes the actual component tables on valid and malformed headers and windows,
+input and work-head boundaries, distinct original input letters, and permitted
+or forbidden writes. Run it with `lake env lean scripts/CheckConfigurationTests.lean`.
+
+[scripts/CheckSpaceInitialization.lean](scripts/CheckSpaceInitialization.lean)
+executes the composed initializer and decoder on empty inputs, distinct input
+and interpreter alphabets, constant and nonconstant bounds, malformed fields,
+and coordinate overflow. Run it with
+`lake env lean scripts/CheckSpaceInitialization.lean`.
+
+The reverse direction is now completely proved in
+[SpaceGeneration.lean](ComplexityOfGenerators/Proofs/SpaceGeneration.lean):
+`pspace_subset_pspaceg : PSPACE α ⊆ PSPACEG α`. The finite program and its proofs
+are in [CyclicGenerator](ComplexityOfGenerators/Simulation/CyclicGenerator).
+It follows Appendix A.17: a word counter enumerates candidates, the source
+decider tests each candidate, a fair coin offers each accepted word, and
+nonempty passes restart. Empty passes drain the random tape. Two virtual tapes
+hold only the current word and the decider's work; touched-cell markers allow
+work memory to be erased and reused between tests.
+
+The proof checks initialization, the four-instruction simulation of each source
+step, erasure and rewinding, counter coverage and overflow, selection, and output.
+For source space `s(n)`, the native machine visits at most
+`10 * (n + s(n) + 1) + 1` cells, independently of runtime and seed length.
+It terminates on every finite seed without explicit rejection, has exactly the
+requested language slice as support, and accepts almost every fair stream when
+that slice is nonempty. The empty word is handled directly; over an empty
+alphabet the existing empty-language and empty-word generators use one cell.
+[RegionSteps.lean](ComplexityOfGenerators/Simulation/TransducerBank/RegionSteps.lean)
+provides the composable fixed-region paths and complete executions used to
+compile this construction into native visited-cell bounds.
+
+Together, `pspaceg_subset_pspace` and `pspace_subset_pspaceg` prove Theorem 6.1.
+The result is the paper's unrelativised equality of polynomial-space language
+classes. The proof does not assert Proposition 6.5's oracle-relativised equality
+or a separate sharp `s²` native bound.
 
 For Theorem 7.1,
 [CertificateVerifier.lean](ComplexityOfGenerators/Simulation/CertificateVerifier.lean)

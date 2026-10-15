@@ -9,6 +9,8 @@ import ComplexityOfGenerators.Foundations.LanguageClosure
 import ComplexityOfGenerators.Proofs.PolynomialCertificateSchemes
 import ComplexityOfGenerators.Proofs.CertificateSchemeGeneration
 import ComplexityOfGenerators.Proofs.GeneratorNonclosure
+import ComplexityOfGenerators.Proofs.SpaceGeneration
+import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
 
 /-!
 # Every result marked “Theorem” in the supplied paper
@@ -17,10 +19,10 @@ Source: `complexity-of-generators-formalisation.pdf`, *Complexity Theory of
 Randomised Testing*. There are five numbered theorems. Each docstring below
 quotes its mathematical statement and identifies its printed page number.
 
-Theorems 3.1, 5.1, 7.1 and 7.2 are proved in the retained finite-control machine model.
-The remaining `sorry` body in Theorem 6.1 is an explicit proof obligation. Verified components
-of the complexity proofs are in `Simulation` and `Proofs`; their presence does
-not establish the remaining main theorems. There are no custom axioms
+All five main theorems are proved in the retained finite-control machine model.
+Theorem 6.1 uses native Savitch configuration-graph search in the forward
+direction and the native cyclic generator in the reverse direction. Verified
+complexity proofs are in `Simulation` and `Proofs`. There are no custom axioms
 asserting supporting complexity-theoretic results. In particular, Theorem 7.1
 uses the user-approved corrections to the certificate definitions: certified
 instances may be empty words, and every sampled certificate must certify an
@@ -60,7 +62,9 @@ This theorem is unrelativised, exactly as stated. Oracle equality is Proposition
 6.5, not another main theorem; no oracle or cryptographic assumption is added. -/
 theorem theorem_6_1_polynomial_space_generation
     (α : Type) [Fintype α] : PSPACEG α = PSPACE α := by
-  sorry
+  apply Set.Subset.antisymm
+  · exact pspaceg_subset_pspace
+  · exact pspace_subset_pspaceg
 
 /-- **Theorem 7.1 (Generators are Certificate Schemes), p. 0:24.**
 “(1) L is generable in polynomial time (L ∈ PG).

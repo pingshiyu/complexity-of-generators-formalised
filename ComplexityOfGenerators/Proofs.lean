@@ -17,6 +17,17 @@ import ComplexityOfGenerators.Proofs.CollisionVerification
 import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
 import ComplexityOfGenerators.Proofs.EmptyWordGeneration
 import ComplexityOfGenerators.Proofs.NativeSpaceContainment
+import ComplexityOfGenerators.Proofs.NativeSpaceCompilation
+import ComplexityOfGenerators.Proofs.PolynomialSpaceSearch
+import ComplexityOfGenerators.Proofs.SpaceGeneration
+import ComplexityOfGenerators.Proofs.PolynomialSpaceStack
+import ComplexityOfGenerators.Proofs.PolynomialSpaceFrames
+import ComplexityOfGenerators.Proofs.PolynomialSpaceExecution
+import ComplexityOfGenerators.Proofs.PolynomialSpaceInitialization
+import ComplexityOfGenerators.Proofs.PolynomialSpaceDecision
+import ComplexityOfGenerators.Proofs.PolynomialSpaceBaseBounds
+import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
+import ComplexityOfGenerators.Proofs.CyclicSelection
 import ComplexityOfGenerators.Proofs.PolynomialVerifiers
 import ComplexityOfGenerators.Proofs.TranscriptScheme
 import ComplexityOfGenerators.Proofs.PolynomialCertificateSchemes
@@ -26,4 +37,4 @@ import ComplexityOfGenerators.Proofs.ClosureArguments
 import ComplexityOfGenerators.Proofs.GeneratorNonclosure
 
 /-! Completed components of the main proofs. This module contains no unfinished
-proofs; the outstanding main declarations remain in `MainTheorems`. -/
+proofs; `MainTheorems` assembles the five completed theorem statements. -/

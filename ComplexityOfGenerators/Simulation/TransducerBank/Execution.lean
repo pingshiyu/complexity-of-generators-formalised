@@ -48,6 +48,18 @@ theorem Steps.go (data : InputData I A) (bits : BitString) (c : BankConfiguratio
   have step := Steps.single B data bits c _ _ _ _ _ _ _ table
   simpa only [advance_stay B data c next input auxiliary index] using step
 
+/-- A read-only instruction moves one virtual head and changes control. -/
+theorem Steps.read (data : InputData I A) (bits : BitString) (c : BankConfiguration O Q S k)
+    (next : Q) (work : Move) (j : Fin k) (selected : B.select c.state = j)
+    (input : c.inputHead ≤ data.input.length) (auxiliary : c.auxiliaryHead ≤ data.auxiliary.length)
+    (index : c.indexHead ≤ data.index)
+    (table : B.instruction data c = .step next (c.tape j (c.head j)) work .stay .stay .stay none) :
+    B.Steps data bits c 1
+      {c with state := next, head := Function.update c.head j (work.onInt (c.head j))} := by
+  rw [← selected] at table ⊢
+  simpa only [advance_read B data c next work input auxiliary index] using
+    Steps.single B data bits c _ _ _ _ _ _ _ table
+
 theorem Steps.trans {data : InputData I A} {bits : BitString} {a b c : BankConfiguration O Q S k} {s t : ℕ}
     (left : B.Steps data bits a s b) (right : B.Steps data bits b t c) :
     B.Steps data bits a (s + t) c := by
