@@ -118,13 +118,17 @@ def PSPACE : LanguageClass α :=
       (∀ w, M.SpaceBound (decisionData w) (p w.length)) ∧
       (∀ w, M.Accepts (decisionData w) [] ↔ w ∈ L) }
 
-/-- Definition 4.3: exact-length, uniform, time-bounded generation. -/
+/-- Definition 4.3 with the approved separate trial budgets: exact-length,
+uniform, time-bounded generation. This extends the paper's domain of
+time-constructible bounds to arbitrary `t`; constructibility is not encoded. -/
 def GTIME (t : ℕ → ℕ) : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
       G.toUniformGenerators.language = L ∧
       ∃ seed : ℕ → ℕ, (∀ n, 0 < seed n) ∧ G.toUniformGenerators.RunsInTime seed t }
 
-/-- Definition 4.4: exact-length, uniform, space-bounded generation. -/
+/-- Definition 4.4: exact-length, uniform, space-bounded generation. This extends
+the paper's domain of space-constructible bounds to arbitrary `s`;
+constructibility is not encoded. -/
 def GSPACE (s : ℕ → ℕ) : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
       G.toUniformGenerators.language = L ∧ G.toUniformGenerators.RunsInSpace s }

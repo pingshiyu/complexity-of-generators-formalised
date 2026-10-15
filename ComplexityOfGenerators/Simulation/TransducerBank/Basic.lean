@@ -1,10 +1,12 @@
-import ComplexityOfGenerators.Simulation.TapeBank
+import ComplexityOfGenerators.Simulation.WorkSteps
+import ComplexityOfGenerators.Simulation.VirtualIndexSimulation
+import Mathlib.Data.Fintype.Pi
 
 /-!
 # Finite tape banks with random input and output
 
-The decision-only tape-bank compiler is extended here to the interfaces needed
-by sampler/recoverer composition. An instruction still accesses just one work
+The shared tape-bank language supplies the interfaces needed by decision
+programs and sampler/recoverer composition. An instruction accesses one work
 cell. Input, auxiliary and unary-index heads move by at most one; random bits
 are consumed one at a time, and output symbols are appended one at a time.
 The index-symbol interface is `Option Unit`, matching the native machine.
@@ -100,6 +102,34 @@ theorem advance_bounded (data : InputData I A) (r : ℕ) (c : BankConfiguration 
 theorem choose_bounded (data : InputData I A) (r : ℕ) (c : BankConfiguration O Q S k)
     (next : Q) (h : B.Bounded data r c) : B.Bounded data (r + 1) (choose c next) :=
   ⟨h.input, h.auxiliary, h.index, fun j => (h.head j).trans (Nat.le_succ r)⟩
+
+def Deterministic : Prop := ∀ q input auxiliary index origin symbol,
+  match B.transition q input auxiliary index origin symbol with
+  | .readRandom _ _ => False
+  | _ => True
+
+theorem Executes.change_bits (deterministic : B.Deterministic)
+    {data : InputData I A} {bits : BitString} {c : BankConfiguration O Q S k}
+    {t : ℕ} {result : Outcome O} (exec : B.Executes data bits c t result) (other : BitString) :
+    B.Executes data other c t result := by
+  induction exec with
+  | accept c table => exact .accept c table
+  | reject c table => exact .reject c table
+  | exhausted c no yes table absent =>
+      have never := deterministic c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
+        (if c.indexHead < data.index then some () else none)
+        (decide (c.head (B.select c.state) = 0)) (c.tape (B.select c.state) (c.head (B.select c.state)))
+      change match B.instruction data c with | .readRandom _ _ => False | _ => True at never
+      simp [table] at never
+  | random c no yes bit t result table lookup rest ih =>
+      have never := deterministic c.state data.input[c.inputHead]? data.auxiliary[c.auxiliaryHead]?
+        (if c.indexHead < data.index then some () else none)
+        (decide (c.head (B.select c.state) = 0)) (c.tape (B.select c.state) (c.head (B.select c.state)))
+      change match B.instruction data c with | .readRandom _ _ => False | _ => True at never
+      simp [table] at never
+  | step c next write work input auxiliary index emit t result table rest ih =>
+      exact .step c next write work input auxiliary index emit t result table ih
+
 
 end TapeBank
 end ComplexityOfGenerators.Simulation.TransducerBank

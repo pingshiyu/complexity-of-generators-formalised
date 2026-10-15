@@ -8,8 +8,9 @@ import Mathlib.Computability.TuringMachine.Computable
 Mathlib already provides finite encodings, partial recursive functions, recursive
 enumerability, Rice's theorem, and many-one reductions. Reuse those definitions
 when proving Theorem 3.1, rather than developing a second computability theory.
-The bridge from this project's machine evaluator to Mathlib's partial-recursive
-semantics is still a separate construction obligation.
+`Simulation.ComputableEvaluator` proves the native evaluator computable, and
+`native_RE_iff_rePred` in `Proofs.GenerabilityContainment` establishes agreement
+of native recursive enumerability with Mathlib's partial-recursive semantics.
 -/
 
 namespace ComplexityOfGenerators.ComputabilityFoundation

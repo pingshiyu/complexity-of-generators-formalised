@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.ExecutionBounds
 import Mathlib.Data.Fintype.EquivFin
 
@@ -72,19 +73,9 @@ theorem decisionComplement_next (data : InputData I A) (bits : BitString) (c : C
   | step state write work input auxiliary index emit => cases write <;> cases emit <;> rfl
 
 theorem decisionComplement_run (data : InputData I A) (bits : BitString) (t : ℕ) :
-    (decisionComplement M).run data bits t = complementResult M (M.run data bits t) := by
-  induction t with
-  | zero => exact decisionComplement_observe M data bits M.initialConfiguration
-  | succ t ih =>
-      rw [Machine.run, ih, Machine.run]
-      cases M.run data bits t with
-      | halted result => rfl
-      | running c =>
-          simp only [complementResult]
-          rw [decisionComplement_next]
-          cases M.next data bits c with
-          | halted result => rfl
-          | running d => exact decisionComplement_observe M data bits d
+    (decisionComplement M).run data bits t = complementResult M (M.run data bits t) :=
+  Machine.run_map (fun _ => rfl) (fun _ => rfl)
+    (decisionComplement_observe M data bits) (decisionComplement_next M data bits) rfl t
 
 theorem decisionComplement_deterministic (deterministic : M.Deterministic) :
     (decisionComplement M).Deterministic := by

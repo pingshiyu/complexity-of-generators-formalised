@@ -3,7 +3,7 @@ import ComplexityOfGenerators.Simulation.SavitchMachine.Ruler
 
 /-! End-to-end executable checks of the concrete recursive machine. These
 exercise the actual field-copy, counter, return, and dispatch instructions;
-the general simulation proofs are in `SavitchMachine.Execution` and `WithInput`.
+the general simulation proofs are in `SavitchMachine.Execution` and `AlphabetSearch`.
 Run with `lake env lean scripts/CheckSavitchMachine.lean` after `lake build`. -/
 
 open ComplexityOfGenerators Simulation StackSpace SavitchMachine Complexity
@@ -18,19 +18,19 @@ def root (depth width : ℕ) : Sav.Sst :=
     [⟨true, false, List.replicate depth false, List.replicate width false,
       List.replicate width false, List.replicate width false⟩]⟩
 
-def run (result : Bool) (input : List Frames.Symbol) :
-    ℕ → Source Frames.Symbol (Label Unit) Local 12 → Option (Bool × Bool)
+def run (result : Bool) (input : List Bool) :
+    ℕ → Source (Alphabet Bool) (Label Unit) (Status × Option (Alphabet Bool)) 12 → Option (Bool × Bool)
   | 0, _ => none
   | fuel + 1, c =>
-      match Turing.TM2.step (WithInput.program () (WithInput.constantBase result)) c with
+      match Turing.TM2.step (AlphabetSearch.program () (AlphabetSearch.constantBase result)) c with
       | some next => run result input fuel next
       | none => some (c.var.1.answer,
-          decide (c.stk (Fin.last 12) = input) &&
+          decide (c.stk (Fin.last 12) = Alphabet.input input) &&
           decide (∀ j : Fin 12, c.stk j.castSucc = []))
 
 def finish (result : Bool) (depth width : ℕ) : Option (Bool × Bool) :=
-  let input := [some true, none, some false, some true]
-  run result input 20000 (WithInput.encoded input .dispatch (root depth width))
+  let input := [true, false, true, true]
+  run result input 20000 (AlphabetSearch.encoded input .dispatch (root depth width))
 
 -- Depth-zero calls execute the concrete base subprogram and pop all six fields.
 #guard finish true 0 0 == some (true, true)

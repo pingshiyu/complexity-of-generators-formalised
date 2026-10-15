@@ -100,8 +100,8 @@ theorem CertificateGenerator.output_length_le {α : Type} {L : Language α}
 
 /-- On all sampler outputs, the recovery bound in `(n, |c|)` is bounded by one
 polynomial in `n`. Together with `sampled_union_eq`, this discharges the semantic
-and resource calculations for the reverse implication of Theorem 7.1; a native
-sequential-composition compiler is still needed. -/
+and resource calculations used with the native sequential-composition compiler
+in `CertificateSchemeGeneration` to prove the reverse implication of Theorem 7.1. -/
 theorem CertificateRecoverer.sampled_polynomial_time {α : Type} {L : Language α}
     {V : PolynomialVerifier L} (R : CertificateRecoverer V) (S : CertificateGenerator V) :
     ∃ p : PolynomialBound, ∀ n c, c ∈ S.sampler.layer n →

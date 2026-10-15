@@ -9,8 +9,8 @@ The midpoint counter, stack evaluator, termination proof, and encoded stack
 bound come from Complexitylib. This module connects their semantics to our
 bounded-path relation. Invalid vertex encodings cannot introduce paths.
 
-This is a bound on the represented stack, not yet a visited-cell bound for a
-native machine implementing the base tests and stack operations.
+This module bounds the represented stack. The native programs and compiler
+used in `Proofs.PolynomialSpaceBase` convert that bound into a visited-cell bound.
 -/
 
 namespace ComplexityOfGenerators.SavitchStack

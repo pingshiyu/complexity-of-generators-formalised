@@ -13,7 +13,7 @@ polynomial size bound at every step.
 `StackSpace.mem_pspace` now compiles finite Mathlib stack programs with bounded
 reachable stacks into the retained native machine, including temporary work.
 The recursive finite control, frame operations and counter are implemented in
-`SavitchMachine`; `PolynomialSpaceExecution` connects their bounded traces to
+`SavitchMachine`; `PolynomialSpaceDecision` connects their bounded traces to
 this algorithm. `PolynomialSpaceInitialization` constructs the root from the
 input; `PolynomialSpaceDecision` supplies native compilation and composition.
 The configuration-graph base program and containment are completed in

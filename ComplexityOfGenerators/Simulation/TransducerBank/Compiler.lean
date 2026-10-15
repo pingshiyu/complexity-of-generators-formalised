@@ -81,6 +81,24 @@ def bankMachine : Machine I A O where
   initial := bankControl .boot
   transition := fun q input auxiliary index raw => bankTransition B (bankControl.symm q) input auxiliary index raw
 
+theorem bankMachine_deterministic (B : TapeBank I A O Q S k) (h : B.Deterministic) :
+    (bankMachine B).Deterministic := by
+  intro q input auxiliary index raw
+  dsimp only [bankMachine]
+  cases phase : (bankControl (Q := Q) (k := k)).symm q with
+  | boot => trivial
+  | place q negative j => trivial
+  | back q negative side => cases h : (bankRead B raw).origin <;> simp [bankTransition, h]
+  | seek q negative =>
+      cases marked : (bankRead B raw).marked (B.select q)
+      · simp [bankTransition, marked]
+      · have deterministic := h q input auxiliary index (bankRead B raw).origin
+          ((bankRead B raw).symbol (B.select q))
+        cases action : B.transition q input auxiliary index (bankRead B raw).origin
+            ((bankRead B raw).symbol (B.select q)) <;>
+          simp_all [bankTransition]
+
+
 def bankCell (tape : Fin k → ℤ → S) (head : Fin k → Option ℤ) (i : ℤ) : BankCell S k :=
   ⟨fun j => tape j i, fun j => decide (head j = some i), decide (i = 0)⟩
 

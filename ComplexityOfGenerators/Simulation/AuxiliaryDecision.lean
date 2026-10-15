@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.ExecutionBounds
 
 /-! A native decider reading its word from the auxiliary tape. Its ordinary
@@ -67,19 +68,9 @@ theorem auxiliaryDecision_next (n : ℕ) (word bits : BitString) (c : Configurat
 
 theorem auxiliaryDecision_run (n : ℕ) (word bits : BitString) (t : ℕ) :
     (auxiliaryDecision M).run (generatorData n word) bits t =
-      auxiliaryDecisionResult M (M.run (decisionData word) bits t) := by
-  induction t with
-  | zero => exact auxiliaryDecision_observe M n word bits M.initialConfiguration
-  | succ t ih =>
-      rw [Machine.run, ih, Machine.run]
-      cases M.run (decisionData word) bits t with
-      | halted result => rfl
-      | running c =>
-          simp only [auxiliaryDecisionResult]
-          rw [auxiliaryDecision_next]
-          cases M.next (decisionData word) bits c with
-          | halted result => rfl
-          | running d => exact auxiliaryDecision_observe M n word bits d
+      auxiliaryDecisionResult M (M.run (decisionData word) bits t) :=
+  Machine.run_map (fun _ => rfl) (fun _ => rfl)
+    (auxiliaryDecision_observe M n word bits) (auxiliaryDecision_next M n word bits) rfl t
 
 theorem auxiliaryDecision_timeBound (n : ℕ) (word : BitString) (t : ℕ)
     (bound : M.TimeBound (decisionData word) t) :

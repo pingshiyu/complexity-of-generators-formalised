@@ -142,7 +142,7 @@ theorem empty_word_language_in_pg : ({[]} : Language α) ∈ PG α := by
 omit [Fintype α] in
 /-- The original `Σ⁺` restriction prevents even certificate coverage at `L = {ε}`.
 This is about the historical condition, not the corrected certificate scheme,
-and does not use the unfinished main-theorem declaration. -/
+and is proved independently of the main theorem. -/
 theorem empty_word_has_no_literal_certificate_coverage :
     ¬ ∃ V : PolynomialVerifier ({[]} : Language α), LiteralCertificateCoverage V := by
   rintro ⟨V, coverage⟩

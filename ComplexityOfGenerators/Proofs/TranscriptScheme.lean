@@ -4,10 +4,10 @@ import ComplexityOfGenerators.Proofs.TranscriptSampling
 # Assembling the forward certificate scheme from a replay verifier
 
 The sampler and recoverer below are the concrete native machines, with all
-scheme obligations proved. The one explicit remaining premise is correctness
+scheme obligations proved. The explicit verifier premise is correctness
 of a polynomial verifier for this specific replay relation. An arbitrary NP
 verifier does not suffice: both components must use the same certificates.
-This file does not assume such a verifier exists.
+`PolynomialCertificateSchemes` constructs the verifier and discharges this premise.
 -/
 
 namespace ComplexityOfGenerators
@@ -20,7 +20,7 @@ set_option backward.isDefEq.respectTransparency false
 variable {α : Type} [Fintype α] (G : GeneratorFamily α)
     (V : PolynomialVerifier G.toUniformGenerators.language)
 
-/-- Specification for the remaining native verifier compiler: on `(word,c)`,
+/-- Specification discharged by the native verifier compiler: on `(word,c)`,
 replay the source with unary index `word.length` and compare its entire output
 with `word`. The verifier must satisfy this for every positive certificate. -/
 def VerifiesGeneratorTranscript : Prop :=

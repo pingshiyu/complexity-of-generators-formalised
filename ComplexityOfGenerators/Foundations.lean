@@ -7,4 +7,4 @@ import ComplexityOfGenerators.Simulation
 import ComplexityOfGenerators.Proofs
 
 /-! Import this module to use the supporting development without importing the
-unfinished Theorem 6.1 proof in `MainTheorems`. -/
+five main theorem statements assembled in `MainTheorems`. -/

@@ -13,7 +13,8 @@ certificate. Every recovered word belongs to the source slice, and every source
 word has a positive certificate. For polynomial-time generators, these
 certificates have polynomial length. `TranscriptSampling` constructs the
 matching sampler; `TranscriptScheme` assembles both components conditional on
-a correct replay verifier, whose native construction remains unfinished.
+a correct replay verifier. `PolynomialCertificateSchemes` supplies that verifier
+using the native construction in `Simulation.TranscriptVerifier`.
 -/
 
 namespace ComplexityOfGenerators

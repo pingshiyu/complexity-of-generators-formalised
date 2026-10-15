@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.RandomTape
 import Mathlib.Data.Fintype.Prod
 import Mathlib.Data.Fintype.EquivFin
@@ -159,18 +160,9 @@ theorem outputMatcher_next (data : InputData α Bool) (bits : BitString) (source
 theorem outputMatcher_runFrom (data : InputData α Bool) (bits : BitString)
     (source : Configuration M) (t : ℕ) :
     (outputMatcher M).runFrom data bits (matcherConfiguration M data.input source) t =
-      matcherResult M data.input (M.runFrom (matcherSourceData data) bits source t) := by
-  induction t with
-  | zero => exact outputMatcher_observe M data bits source
-  | succ t ih =>
-      simp only [Machine.runFrom, ih]
-      cases M.runFrom (matcherSourceData data) bits source t with
-      | halted result => rfl
-      | running current =>
-          simp only [matcherResult, outputMatcher_next]
-          cases M.next (matcherSourceData data) bits current with
-          | halted result => rfl
-          | running next => exact outputMatcher_observe M data bits next
+      matcherResult M data.input (M.runFrom (matcherSourceData data) bits source t) :=
+  Machine.runFrom_map (fun _ => rfl) (fun _ => rfl)
+    (outputMatcher_observe M data bits) (outputMatcher_next M data bits) source t
 
 theorem outputMatcher_run (data : InputData α Bool) (bits : BitString) (t : ℕ) :
     (outputMatcher M).run data bits t = matcherResult M data.input (M.run (matcherSourceData data) bits t) := by

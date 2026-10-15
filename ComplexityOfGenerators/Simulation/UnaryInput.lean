@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.RandomTape
 
 /-!
@@ -104,18 +105,9 @@ theorem unarySwap_next (data : InputData Unit A) (bits : BitString) (c : Configu
 
 /-- The swap has no runtime overhead, even on short random tapes. -/
 theorem unarySwap_run (data : InputData Unit A) (bits : BitString) (t : ℕ) :
-    (unarySwapMachine M).run (unarySwapData data) bits t = unarySwapResult M (M.run data bits t) := by
-  induction t with
-  | zero => exact unarySwap_observe M data bits M.initialConfiguration
-  | succ t ih =>
-      simp only [Machine.run, ih]
-      cases M.run data bits t with
-      | halted result => rfl
-      | running c =>
-          simp only [unarySwapResult, unarySwap_next]
-          cases M.next data bits c with
-          | halted result => rfl
-          | running d => exact unarySwap_observe M data bits d
+    (unarySwapMachine M).run (unarySwapData data) bits t = unarySwapResult M (M.run data bits t) :=
+  Machine.run_map (fun _ => rfl) (fun _ => rfl)
+    (unarySwap_observe M data bits) (unarySwap_next M data bits) rfl t
 
 theorem unarySwap_timeBound (data : InputData Unit A) (t : ℕ) (bound : M.TimeBound data t) :
     (unarySwapMachine M).TimeBound (unarySwapData data) t := by

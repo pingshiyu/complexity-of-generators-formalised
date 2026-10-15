@@ -82,7 +82,7 @@ axioms; only `propext`, `Classical.choice` and `Quot.sound` are allowed.
 | [Computability.lean](ComplexityOfGenerators/Foundations/Computability.lean) | Mathlib encodings, partial-recursive enumerability, computable predicates and many-one reductions; imported proofs of Post's theorem and the halting problem. Mathlib's polynomial-time TM interface is exposed too. | Computability foundations for Theorem 3.1. |
 | [ResourceBounds.lean](ComplexityOfGenerators/Foundations/ResourceBounds.lean) | Positive polynomial bounds, conversion to Mathlib polynomials, domination of every natural-coefficient polynomial, and bounds for addition, multiplication and composition. | Resource accounting for verifiers, samplers, recovery and reductions. |
 | [SpaceBounds.lean](ComplexityOfGenerators/Foundations/SpaceBounds.lean) | Visited cells form an integer interval containing the origin and head; unvisited cells are blank. Space bounds control head coordinates and tape support. A native time bound `t` implies space at most `t+1`, including the terminal successor. | Finite configuration windows for Theorem 6.1. |
-| [SpaceConfigurations.lean](ComplexityOfGenerators/Foundations/SpaceConfigurations.lean) | Faithful finite encoding of bounded decision configurations, exact code count and an exponential upper bound, plus correspondence of native transitions after erasing unobservable histories. Includes terminal successor configurations. | Configuration graphs for Theorem 6.1; this does not yet compile graph search into a native machine. |
+| [SpaceConfigurations.lean](ComplexityOfGenerators/Foundations/SpaceConfigurations.lean) | Faithful finite encoding of bounded decision configurations, exact code count and an exponential upper bound, plus correspondence of native transitions after erasing unobservable histories. Includes terminal successor configurations. | Configuration graphs for Theorem 6.1; native graph search is completed in `Proofs.PolynomialSpaceBase`. |
 | [Cryptography.lean](ComplexityOfGenerators/Foundations/Cryptography.lean) | Collision language, pigeonhole collision existence at every parameter, nonempty slices, injective pair codec, and a proved equivalence of the paper's assumption with VCVio's `SecurityGame.secureAgainst` and `negligible`. | Collision-resistance assumptions in Theorems 5.1 and 7.2. |
 | [Probability.lean](ComplexityOfGenerators/Foundations/Probability.lean) | Fair-coin probability measure, cylinder mass `2⁻ᵏ`, and measurability of acceptance and collision-success events. | The probability semantics of generators and attackers. |
 | [ModelBridge.lean](ComplexityOfGenerators/Foundations/ModelBridge.lean) | Explicit comparison interfaces and proved conditional transport of Savitch and the complement-nonclosure argument. | Records which generator-specific simulations remain to be constructed. |
@@ -147,6 +147,17 @@ The proof development contains these checked components:
 | [CryptographicReduction.lean](ComplexityOfGenerators/Proofs/CryptographicReduction.lean) | A finder correct on every full-budget seed succeeds with probability one and contradicts the exact collision-resistance assumption. The generic ternary reduction has an explicit simulation premise; `BinaryCollisionFinder` supplies the fully constructed binary attack. |
 
 These modules are imported by `Foundations` and covered by the axiom audit.
+The decision-bank compiler translates instructions through
+`TapeBank.toTransducer` and reuses the general `TransducerBank` compiler,
+preserving the instruction count and the native time bound above.
+`TapeBankScans` and `TapeBankStep` remain forwarding imports; their former
+decision-specific compiler internals are replaced by the shared transducer
+API. The scan, step, random-read and terminal proofs construct one native
+execution path, from which both time and space results follow. Region bounds
+remain conditional on the initial visited cells and the scanned coordinates.
+[RunSimulation.lean](ComplexityOfGenerators/Foundations/RunSimulation.lean)
+similarly shares the execution induction for clock-for-clock machine adapters.
+
 The recursive-program compiler now proves native recognition on the original
 word alphabet, and the local `RE` class agrees with Mathlib's recursively
 enumerable word predicates. No polynomial bound is asserted for this composite
@@ -264,23 +275,23 @@ final halting. Its six frame columns and six scratch registers are manipulated
 by checked cell-by-cell copy, transfer, comparison, and erasure loops.
 [Execution.lean](ComplexityOfGenerators/Simulation/SavitchMachine/Execution.lean)
 proves agreement with each active library step and every finite execution.
-[WithInput.lean](ComplexityOfGenerators/Simulation/SavitchMachine/WithInput.lean)
-extends this program with a persistent input stack, whose length is also
-charged to the space bound. Recursive routines preserve it.
+[AlphabetSearch.lean](ComplexityOfGenerators/Simulation/SavitchMachine/AlphabetSearch.lean)
+extends this program with a persistent stack of original input letters, whose
+length is also charged to the space bound. Recursive routines preserve it.
 
 [PolynomialSpaceFrames.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceFrames.lean)
 proves that the actual generator search satisfies the column bound and exact
 midpoint-width invariant.
-[PolynomialSpaceExecution.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceExecution.lean)
-connects the recursive program to the correct generator-membership answer,
-with an explicit obligation for the configuration-graph base-test subprogram.
-The configuration-graph base subprogram remains to be implemented. It is not
-hidden in a new assumption of Theorem 6.1. Input initialization and native
-compilation are now supplied by the modules below.
+[PolynomialSpaceDecision.lean](ComplexityOfGenerators/Proofs/PolynomialSpaceDecision.lean)
+proves the search trace for `AlphabetSearch` and compiles it with initialization.
+Its configuration-graph base-test interface is discharged in
+`PolynomialSpaceBase`. The older `WithInput` interpreter and
+`generator_membership_trace_of_base` theorem have been retired; their module
+paths remain as forwarding imports to the final construction.
 
 The concrete constant-predicate base subprogram is proved correct and used in
 [scripts/CheckSavitchMachine.lean](scripts/CheckSavitchMachine.lean) to execute
-the complete recursive table. The checks cover both answers, zero-width
+the complete alphabet-aware recursive table. The checks cover both answers, zero-width
 midpoints, overflow, nested recursion, scratch cleanup, and input preservation.
 Run them with `lake env lean scripts/CheckSavitchMachine.lean`.
 
@@ -302,7 +313,8 @@ then joins initialization to recursive search and compiles the entire program
 into the retained single-work-tape model. Its theorem
 `generator_language_mem_pspace_of_base` has one explicit implementation premise:
 a finite configuration-graph base program with the specified correctness and
-space bound. That program has not yet been constructed.
+space bound. `PolynomialSpaceBase.generator_configuration_base` constructs the
+program, and `pspaceg_subset_pspace` applies it to discharge this premise.
 
 [CoordinateDecode.lean](ComplexityOfGenerators/Simulation/SavitchMachine/CoordinateDecode.lean)
 implements the existing fixed-width coordinate codec, including wrong-length
@@ -456,8 +468,13 @@ Every declaration includes the paper's statement and number in its docstring.
 | Theorem 7.1, 0:24 | `theorem_7_1_generators_are_certificate_schemes` | `L ∈ PG α ↔ ∃ V : PolynomialVerifier L, HasCertificateScheme V`. The verifier is existential, and `L ∈ NP` is not an extra hypothesis. |
 | Theorem 7.2, 0:25 | `theorem_7_2_efficient_generators_are_not_composable` | `NP Bool ≠ coNP Bool` implies failure of complement closure; independently, collision-resistant hashes imply failure of intersection closure. |
 
-Lemmas, propositions, corollaries, examples, remarks, and references to other
-authors' theorems are outside the requested main-theorem inventory.
+The scope is the five main theorems and their supporting definitions and proofs,
+not every definition or result in the paper. In particular, expected-time
+generation (`EPG`, Definitions 5.6–5.7), log-space generation (`LG`, Definition
+6.1), and the function-oracle machinery (Definitions 6.4–6.7) are not formalised.
+Some lemmas, propositions, corollaries, examples, remarks, and other authors'
+theorems are included as supporting material; the table above is not an
+inventory of those results.
 
 ## Definitions and modelling choices
 
@@ -495,6 +512,12 @@ authors' theorems are outside the requested main-theorem inventory.
   equivalence with the paper's full asymptotic conventions is future work;
   domination of natural-coefficient polynomials is now proved in
   `Foundations.ResourceBounds`.
+- `GTIME t` and `GSPACE s` are defined for arbitrary functions `ℕ → ℕ`.
+  Paper Definitions 4.3–4.4 restrict these parameters to time-constructible and
+  space-constructible functions, respectively. The Lean definitions extend that
+  domain without imposing or formalising constructibility. The five main theorems
+  use explicit polynomial bounds; they do not assert the paper's general
+  constructibility-dependent containments for arbitrary functions.
 - Time-bounded generation follows **Remark 1**, with the user's approved
   separation of seed and execution budgets. One polynomial `r(n)` bounds random
   tape length; another polynomial `t(n)` bounds primitive transitions. Every

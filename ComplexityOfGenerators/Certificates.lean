@@ -134,7 +134,8 @@ theorem CertificateGenerator.sampler_nonempty_iff {V : PolynomialVerifier L}
     exact ⟨c, sampled⟩
 
 /-- The language-level equation needed by sampler/recoverer composition. The
-native compiler for their sequential execution remains a separate obligation. -/
+native sequential compiler is supplied by `Simulation.SamplerComposition` and
+used in `Proofs.CertificateSchemeGeneration`. -/
 theorem CertificateRecoverer.sampled_union_eq {V : PolynomialVerifier L}
     (R : CertificateRecoverer V) (S : CertificateGenerator V) (n : ℕ) :
     {w | ∃ c, c ∈ S.sampler.layer n ∧ w ∈ R.machine.generatedLanguage (generatorData n c)} =

@@ -1,4 +1,4 @@
-import ComplexityOfGenerators.Foundations.RandomTape
+import ComplexityOfGenerators.Foundations.ExecutionRegions
 
 /-!
 # Exact runtime of native tape scans
@@ -40,6 +40,48 @@ theorem ScanResult.readHeadBounds {data : InputData I A} {start ready : Configur
   · rw [h.auxiliary]; exact bound.auxiliary
   · rw [h.index]; exact bound.index
 
+/-- A scan has one concrete path. Region preservation is conditional on the
+initial visited set and the scanned coordinates, independently of runtime. -/
+theorem tapeScan_path (data : InputData I A) (bits : BitString)
+    (start : Configuration M) (state : Fin M.states)
+    (position : ℕ → ℤ) (direction : ℕ → Move) (steps : ℕ)
+    (bounds : ReadHeadBounds M data start)
+    (initialState : start.state = state) (initialHead : start.workHead = position 0)
+    (move : ∀ j, j < steps → (direction j).onInt (position j) = position (j + 1))
+    (table : ∀ j, j < steps → ∀ input auxiliary index,
+      M.transition state input auxiliary index (start.work (position j)) =
+        .step state none (direction j) .stay .stay .stay none) :
+    ∃ ready, ScanResult M start ready (position steps) ∧
+      M.Steps data bits start steps ready ∧
+      ∀ r, M.InRegion r start → (∀ j ≤ steps, -(r : ℤ) ≤ position j ∧ position j ≤ r) →
+        M.InRegion r ready := by
+  induction steps with
+  | zero => exact ⟨start, ⟨rfl, initialHead, rfl, rfl, rfl, rfl, rfl, rfl⟩, .refl, fun _ region _ => region⟩
+  | succ steps ih =>
+      obtain ⟨current, scan, path, visited⟩ := ih
+        (fun j hj => move j (by omega)) (fun j hj => table j (by omega))
+      have action : M.transition current.state data.input[current.inputHead]?
+          data.auxiliary[current.auxiliaryHead]?
+          (if current.indexHead < data.index then some () else none) (current.work current.workHead) =
+          .step state none (direction steps) .stay .stay .stay none := by
+        rw [scan.state, initialState, scan.head, scan.memory]
+        exact table steps (Nat.lt_succ_self _) _ _ _
+      let ready := M.stepConfiguration data current state none (direction steps) .stay .stay .stay none
+      refine ⟨ready, ⟨initialState.symm, ?_, scan.memory, scan.random, scan.output, ?_, ?_, ?_⟩,
+        path.tail (M.next_step _ _ _ _ _ _ _ _ _ _ action), ?_⟩
+      · change (direction steps).onInt current.workHead = _
+        rw [scan.head]; exact move steps (Nat.lt_succ_self _)
+      · change min current.inputHead data.input.length = start.inputHead
+        rw [scan.input, Nat.min_eq_left bounds.input]
+      · change min current.auxiliaryHead data.auxiliary.length = start.auxiliaryHead
+        rw [scan.auxiliary, Nat.min_eq_left bounds.auxiliary]
+      · change min current.indexHead data.index = start.indexHead
+        rw [scan.index, Nat.min_eq_left bounds.index]
+      · intro r region positions
+        apply (visited r region (fun j hj => positions j (by omega))).step M
+        rw [scan.head, move steps (Nat.lt_succ_self _)]
+        exact positions (steps + 1) le_rfl
+
 theorem tapeScan_with_heads (data : InputData I A) (bits : BitString)
     (start : Configuration M) (state : Fin M.states)
     (position : ℕ → ℤ) (direction : ℕ → Move) (steps : ℕ)
@@ -51,32 +93,9 @@ theorem tapeScan_with_heads (data : InputData I A) (bits : BitString)
         .step state none (direction k) .stay .stay .stay none) :
     ∃ ready : Configuration M, ScanResult M start ready (position steps) ∧
       M.runFrom data bits start steps = M.observe data bits ready := by
-  induction steps with
-  | zero => exact ⟨start, ⟨rfl, initialHead, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl⟩
-  | succ steps ih =>
-      obtain ⟨current, scan, execution⟩ :=
-        ih (fun k hk => move k (by omega)) (fun k hk => table k (by omega))
-      have action : M.transition current.state data.input[current.inputHead]?
-          data.auxiliary[current.auxiliaryHead]?
-          (if current.indexHead < data.index then some () else none) (current.work current.workHead) =
-          .step state none (direction steps) .stay .stay .stay none := by
-        rw [scan.state, initialState, scan.head, scan.memory]
-        exact table steps (Nat.lt_succ_self _) _ _ _
-      let ready := M.stepConfiguration data current state none (direction steps) .stay .stay .stay none
-      have live := M.observe_step data bits current _ _ _ _ _ _ _ action
-      have next := M.next_step data bits current _ _ _ _ _ _ _ action
-      refine ⟨ready, ⟨initialState.symm, ?_, scan.memory, scan.random, scan.output, ?_, ?_, ?_⟩, ?_⟩
-      · change (direction steps).onInt current.workHead = _
-        rw [scan.head]
-        exact move steps (Nat.lt_succ_self _)
-      · change min current.inputHead data.input.length = start.inputHead
-        rw [scan.input, Nat.min_eq_left bounds.input]
-      · change min current.auxiliaryHead data.auxiliary.length = start.auxiliaryHead
-        rw [scan.auxiliary, Nat.min_eq_left bounds.auxiliary]
-      · change min current.indexHead data.index = start.indexHead
-        rw [scan.index, Nat.min_eq_left bounds.index]
-      · simp only [Machine.runFrom, execution, live, next]
-        rfl
+  obtain ⟨ready, scan, path, _⟩ := tapeScan_path M data bits start state position direction
+    steps bounds initialState initialHead move table
+  exact ⟨ready, scan, path.runFrom M⟩
 
 theorem tapeScan (data : InputData I A) (bits : BitString)
     (start : Configuration M) (state : Fin M.states)

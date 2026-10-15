@@ -3,7 +3,7 @@ import ComplexityOfGenerators.Simulation.SavitchMachine.Alphabet
 
 /-! Initialize the precise root configuration used in the generator-membership
 search, starting with the actual source input. This discharges initialization
-separately from the still-required configuration-graph base program. -/
+separately from the configuration-graph base program supplied in `PolynomialSpaceBase`. -/
 
 namespace ComplexityOfGenerators
 

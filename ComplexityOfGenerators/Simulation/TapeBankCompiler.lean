@@ -1,182 +1,80 @@
 import ComplexityOfGenerators.Simulation.TapeBank
+import ComplexityOfGenerators.Simulation.TransducerBank.Compiler
 
-/-! A native finite-control compiler for a fixed finite bank of tapes. All
-virtual head movements are implemented by scans of the single native work
-tape. The tape bank is an intermediate language, not a replacement for the
-machine model used in the complexity classes. -/
+/-! Decision banks use the general transducer compiler. The translation keeps
+one instruction per source instruction, emits nothing, and never reads random
+bits. The collision-checker interface remains decision-only. -/
 
 namespace ComplexityOfGenerators.Simulation
 
-@[ext] structure BankCell (S : Type) (k : ℕ) where
-  symbol : Fin k → S
-  marked : Fin k → Bool
-  origin : Bool
-  deriving Fintype
+set_option backward.isDefEq.respectTransparency false
 
-inductive BankPhase (Q : Type) (k : ℕ)
-  | boot
-  | seek (q : Q) (negative : Fin k → Bool)
-  | place (q : Q) (negative : Fin k → Bool) (j : Fin k)
-  | back (q : Q) (negative : Fin k → Bool) (side : Bool)
-  deriving Fintype
+variable {Q S : Type} {k : ℕ}
+
+def BankInstruction.toTransducer : BankInstruction Q S → TransducerBank.BankInstruction Q S Unit
+  | .accept => .accept
+  | .reject => .reject
+  | .step next write work input => .step next write work input .stay .stay none
+
+def TapeBank.toTransducer (B : TapeBank Q S k) : TransducerBank.TapeBank Bool Bool Unit Q S k where
+  initial := B.initial
+  blank := B.blank
+  select := B.select
+  transition := fun q input _ _ origin symbol => (B.transition q input origin symbol).toTransducer
+
+def BankConfiguration.toTransducer (c : BankConfiguration Q S k) :
+    TransducerBank.BankConfiguration Unit Q S k :=
+  ⟨c.state, c.inputHead, 0, 0, 0, [], c.head, c.tape⟩
+
+def bankOutcome (accepted : Bool) : Outcome Unit :=
+  if accepted then .accepted [] else .rejected
+
+namespace TapeBank
+
+variable (B : TapeBank Q S k)
+
+@[simp] theorem toTransducer_initial :
+    B.toTransducer.initialConfiguration = B.initialConfiguration.toTransducer := rfl
+
+@[simp] theorem toTransducer_instruction (word : BitString) (c : BankConfiguration Q S k) :
+    B.toTransducer.instruction (decisionData word) c.toTransducer =
+      (B.instruction word c).toTransducer := rfl
+
+@[simp] theorem toTransducer_advance (word : BitString) (c : BankConfiguration Q S k)
+    (next write work input) :
+    B.toTransducer.advance (decisionData word) c.toTransducer next write work input .stay .stay none =
+      (B.advance word c next write work input).toTransducer := by
+  simp [toTransducer, BankConfiguration.toTransducer, TransducerBank.TapeBank.advance,
+    advance, decisionData, Move.onInput]
+
+theorem Executes.toTransducer {word : BitString} {c : BankConfiguration Q S k} {t result}
+    (exec : B.Executes word c t result) (bits : BitString) :
+    B.toTransducer.Executes (decisionData word) bits c.toTransducer t (bankOutcome result) := by
+  induction exec with
+  | accept c table =>
+      exact .accept _ (by simp [table, BankInstruction.toTransducer])
+  | reject c table =>
+      exact .reject _ (by simp [table, BankInstruction.toTransducer])
+  | step c next write work input t result table rest ih =>
+      apply TransducerBank.TapeBank.Executes.step _ next write work input .stay .stay none t _
+        (by simp [table, BankInstruction.toTransducer])
+      simpa using ih
+
+theorem toTransducer_deterministic : B.toTransducer.Deterministic := by
+  intro q input auxiliary index origin symbol
+  dsimp only [toTransducer]
+  cases B.transition q input origin symbol <;> trivial
+
+end TapeBank
 
 noncomputable section
 
-set_option synthInstance.maxSize 4096
-set_option backward.isDefEq.respectTransparency false
+variable [Fintype Q] [Fintype S] (B : TapeBank Q S k)
 
-variable {Q S : Type} {k : ℕ} [Fintype Q] [Fintype S] (B : TapeBank Q S k)
+def bankMachine : Machine Bool Bool Unit := TransducerBank.bankMachine B.toTransducer
 
-def bankAlphabet : BankCell S k ≃ Fin (Fintype.card (BankCell S k)) := Fintype.equivFin _
-def bankControl : BankPhase Q k ≃ Fin (Fintype.card (BankPhase Q k)) := Fintype.equivFin _
-
-def bankBlank : BankCell S k := ⟨fun _ => B.blank, fun _ => false, false⟩
-
-def bankRead (raw : Option (Fin (Fintype.card (BankCell S k)))) : BankCell S k :=
-  match raw with | none => bankBlank B | some a => bankAlphabet.symm a
-
-@[simp] theorem bankRead_write (cell : BankCell S k) :
-    bankRead B (some (bankAlphabet cell)) = cell := by simp [bankRead]
-
-def bankSide (origin negative : Bool) (move : Move) : Bool :=
-  if origin then decide (move = .left) else negative
-
-def bankTransition (phase : BankPhase Q k) (input : Option Bool)
-    (raw : Option (Fin (Fintype.card (BankCell S k)))) :
-    Instruction Unit (Fintype.card (BankPhase Q k)) (Fintype.card (BankCell S k)) :=
-  let cell := bankRead B raw
-  let silent := fun phase move => Instruction.step (bankControl phase) none move .stay .stay .stay none
-  match phase with
-  | .boot => .step (bankControl (.seek B.initial (fun _ => false)))
-      (some (bankAlphabet ⟨fun _ => B.blank, fun _ => true, true⟩)) .stay .stay .stay .stay none
-  | .seek q negative =>
-      let j := B.select q
-      if !cell.marked j then silent phase (if negative j then .left else .right)
-      else match B.transition q input cell.origin (cell.symbol j) with
-      | .accept => .accept
-      | .reject => .reject
-      | .step next write work input =>
-          .step (bankControl (.place next
-            (Function.update negative j (bankSide cell.origin (negative j) work)) j))
-            (some (bankAlphabet {cell with
-              symbol := Function.update cell.symbol j write,
-              marked := Function.update cell.marked j false})) work input .stay .stay none
-  | .place q negative j =>
-      .step (bankControl (.back q negative (negative j)))
-        (some (bankAlphabet {cell with marked := Function.update cell.marked j true}))
-        .stay .stay .stay .stay none
-  | .back q negative side =>
-      if cell.origin then silent (.seek q negative) .stay
-      else silent phase (if side then .right else .left)
-
-def bankMachine : Machine Bool Bool Unit where
-  inputFinite := inferInstance
-  auxiliaryFinite := inferInstance
-  outputFinite := inferInstance
-  states := Fintype.card (BankPhase Q k)
-  symbols := Fintype.card (BankCell S k)
-  initial := bankControl .boot
-  transition := fun q input _ _ raw => bankTransition B (bankControl.symm q) input raw
-
-theorem bankMachine_deterministic : (bankMachine B).Deterministic := by
-  intro q input auxiliary index raw
-  dsimp only [bankMachine]
-  cases phase : (bankControl (Q := Q) (k := k)).symm q with
-  | boot => trivial
-  | place q negative j => trivial
-  | back q negative side => cases h : (bankRead B raw).origin <;> simp [bankTransition, h]
-  | seek q negative =>
-      cases h : (bankRead B raw).marked (B.select q)
-      · simp [bankTransition, h]
-      · cases h' : B.transition q input (bankRead B raw).origin
-          ((bankRead B raw).symbol (B.select q)) <;> simp [bankTransition, h, h']
-
-def bankCell (tape : Fin k → ℤ → S) (head : Fin k → Option ℤ) (i : ℤ) : BankCell S k :=
-  ⟨fun j => tape j i, fun j => decide (head j = some i), decide (i = 0)⟩
-
-def BankMemory (tape : Fin k → ℤ → S) (head : Fin k → Option ℤ)
-    (memory : ℤ → Option (Fin (Fintype.card (BankCell S k)))) : Prop :=
-  ∀ i, bankRead B (memory i) = bankCell tape head i
-
-theorem BankMemory.write_clear {tape : Fin k → ℤ → S} {head : Fin k → Option ℤ}
-    {memory} (j : Fin k) (position : ℤ) (symbol : S)
-    (h : BankMemory B tape head memory) (atHead : head j = some position) :
-    BankMemory B (Function.update tape j (Function.update (tape j) position symbol))
-      (Function.update head j none)
-      (Function.update memory position (some (bankAlphabet
-        {bankRead B (memory position) with
-          symbol := Function.update (bankRead B (memory position)).symbol j symbol,
-          marked := Function.update (bankRead B (memory position)).marked j false}))) := by
-  intro i
-  by_cases same : i = position
-  · subst i
-    rw [Function.update_self, bankRead_write, h]
-    apply BankCell.ext
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha]
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha]
-    · rfl
-  · rw [Function.update_of_ne same, h]
-    apply BankCell.ext
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha, same]
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha, atHead, Ne.symm same]
-    · rfl
-
-theorem BankMemory.place {tape : Fin k → ℤ → S} {head : Fin k → Option ℤ}
-    {memory} (j : Fin k) (position : ℤ)
-    (h : BankMemory B tape head memory) (absent : head j = none) :
-    BankMemory B tape (Function.update head j (some position))
-      (Function.update memory position (some (bankAlphabet
-        {bankRead B (memory position) with
-          marked := Function.update (bankRead B (memory position)).marked j true}))) := by
-  intro i
-  by_cases same : i = position
-  · subst i
-    rw [Function.update_self, bankRead_write, h]
-    apply BankCell.ext
-    · rfl
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha]
-    · rfl
-  · rw [Function.update_of_ne same, h]
-    apply BankCell.ext
-    · rfl
-    · funext a
-      by_cases ha : a = j <;> simp [bankCell, ha, absent, Ne.symm same]
-    · rfl
-
-structure BankSnapshot (source : BankConfiguration Q S k)
-    (target : Configuration (bankMachine B)) : Prop where
-  memory : BankMemory B source.tape (fun j => some (source.head j)) target.work
-  input : target.inputHead = source.inputHead
-  auxiliary : target.auxiliaryHead = 0
-  index : target.indexHead = 0
-  random : target.randomHead = 0
-  output : target.output = []
-
-structure BankReady (source : BankConfiguration Q S k) (negative : Fin k → Bool)
-    (target : Configuration (bankMachine B)) : Prop extends BankSnapshot B source target where
-  state : target.state = bankControl (.seek source.state negative)
-  head : target.workHead = 0
-  side : ∀ j, if negative j then source.head j ≤ 0 else 0 ≤ source.head j
-
-theorem BankSnapshot.readHeadBounds {word : BitString} {r : ℕ} {source} {target}
-    (h : BankSnapshot B source target) (bounded : B.Bounded word r source) :
-    ReadHeadBounds (bankMachine B) (decisionData word) target := by
-  constructor
-  · simpa [decisionData, h.input] using bounded.1
-  · simp [decisionData, h.auxiliary]
-  · simp [decisionData, h.index]
-
-theorem BankSnapshot.scan {source} {start ready : Configuration (bankMachine B)} {position}
-    (h : BankSnapshot B source start) (scan : ScanResult (bankMachine B) start ready position) :
-    BankSnapshot B source ready := by
-  exact ⟨scan.memory ▸ h.memory, scan.input.trans h.input,
-    scan.auxiliary.trans h.auxiliary, scan.index.trans h.index,
-    scan.random.trans h.random, scan.output.trans h.output⟩
+theorem bankMachine_deterministic : (bankMachine B).Deterministic :=
+  TransducerBank.bankMachine_deterministic B.toTransducer B.toTransducer_deterministic
 
 end
 end ComplexityOfGenerators.Simulation

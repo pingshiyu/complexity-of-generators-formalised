@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.BinaryCollisions
 import Mathlib.Data.Fintype.Prod
 import Mathlib.Data.Fintype.Option
@@ -137,18 +138,9 @@ theorem binaryOutputDecoder_next (data : InputData I A) (bits : BitString) (c : 
 
 /-- Exact clock correspondence, including explicit rejection and exhaustion. -/
 theorem binaryOutputDecoder_run (data : InputData I A) (bits : BitString) (t : ℕ) :
-    (binaryOutputDecoder M).run data bits t = decodeOutputResult M (M.run data bits t) := by
-  induction t with
-  | zero => exact binaryOutputDecoder_observe M data bits M.initialConfiguration
-  | succ t ih =>
-      simp only [Machine.run, ih]
-      cases M.run data bits t with
-      | halted result => rfl
-      | running c =>
-          simp only [decodeOutputResult, binaryOutputDecoder_next]
-          cases M.next data bits c with
-          | halted result => rfl
-          | running d => exact binaryOutputDecoder_observe M data bits d
+    (binaryOutputDecoder M).run data bits t = decodeOutputResult M (M.run data bits t) :=
+  Machine.run_map (fun _ => rfl) (fun _ => rfl)
+    (binaryOutputDecoder_observe M data bits) (binaryOutputDecoder_next M data bits) rfl t
 
 theorem binaryOutputDecoder_timeBound (data : InputData I A) (t : ℕ)
     (bound : M.TimeBound data t) : (binaryOutputDecoder M).TimeBound data t := by

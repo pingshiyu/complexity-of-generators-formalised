@@ -1,18 +1,18 @@
-import ComplexityOfGenerators.Simulation.SavitchMachine.WithInput
+import ComplexityOfGenerators.Simulation.SavitchMachine.AlphabetSearch
 
 /-! A concrete base subprogram for constant graph predicates. This also
 provides an executable instance of the complete recursive control table,
 including successful and unsuccessful midpoint searches. -/
 
-namespace ComplexityOfGenerators.Simulation.SavitchMachine.WithInput
+namespace ComplexityOfGenerators.Simulation.SavitchMachine.AlphabetSearch
 
 open Turing StackSpace Complexity Frames
 set_option backward.isDefEq.respectTransparency false
 
-def constantBase (result : Bool) (_ : Unit) : Code Unit :=
+def constantBase {α : Type} (result : Bool) (_ : Unit) : Code α Unit :=
   .load (fun v => ({v.1 with returned := some result}, none)) (.goto fun _ => loadPhase 0)
 
-theorem constantBase_correct (result : Bool) (input : List Symbol) (r : ℕ)
+theorem constantBase_correct {α : Type} (result : Bool) (input : List α) (r : ℕ)
     (room : input.length ≤ r) :
     BaseCorrect () (constantBase result) input (fun _ _ => result) (fun _ => result) r := by
   intro a f fs _ bound
@@ -26,11 +26,11 @@ theorem constantBase_correct (result : Bool) (input : List Symbol) (r : ℕ)
   have next : TM2.step (program () (constantBase result))
       (encoded input (.base ()) ⟨false, a, none, f :: fs⟩) =
       some (encoded input (loadPhase 0) ⟨false, a, some result, f :: fs⟩) := by
-    simp [TM2.step, encoded, extendConfig, SavitchMachine.encoded, localConfig,
-      program, constantBase, TM2.stepAux, status]
+    simp [TM2.step, encoded, Alphabet.encoded, Alphabet.input, extendConfig,
+      localConfig, program, constantBase, TM2.stepAux, status]
   have baseVal : Sav.baseVal (fun _ _ => result) (fun _ => result) f = result := by
     simp [Sav.baseVal]
   rw [baseVal]
   exact .step (encoded_bound input (.base ()) _ r room bound) next tail
 
-end ComplexityOfGenerators.Simulation.SavitchMachine.WithInput
+end ComplexityOfGenerators.Simulation.SavitchMachine.AlphabetSearch

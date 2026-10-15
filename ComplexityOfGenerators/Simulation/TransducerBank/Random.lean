@@ -10,7 +10,7 @@ variable {I A O Q S : Type} {k : ℕ} [Fintype I] [Fintype A] [Fintype O]
 
 /-- A random bank instruction uses one physical random read. The return scan
 preserves that cursor, all input heads, all work tapes and accumulated output. -/
-theorem bank_random (data : InputData I A) (bits : BitString) (r : ℕ)
+theorem bank_random_path (data : InputData I A) (bits : BitString) (r : ℕ)
     (source : BankConfiguration O Q S k) (negative : Fin k → Bool)
     (start : Configuration (bankMachine B)) (h : BankReady B source negative start)
     (bounded : B.Bounded data r source) (no yes : Q) (bit : Bool)
@@ -18,13 +18,16 @@ theorem bank_random (data : InputData I A) (bits : BitString) (r : ℕ)
     (lookup : bits[source.randomHead]? = some bit) :
     ∃ ticks ready, ticks ≤ 2 * r + 4 ∧
       BankReady B (TapeBank.choose source (if bit then yes else no)) negative ready ∧
-      (bankMachine B).runFrom data bits start ticks = (bankMachine B).observe data bits ready := by
+      (bankMachine B).Steps data bits start ticks ready ∧
+      ∀ s, (bankMachine B).InRegion s start → (source.head (B.select source.state)).natAbs ≤ s →
+        (bankMachine B).InRegion s ready := by
   let M := bankMachine B
   let j := B.select source.state
   let position := source.head j
   let q := if bit then yes else no
   let advanced := TapeBank.choose source q
-  obtain ⟨fetched, scan, fetchRun⟩ := bank_seek B data bits r source negative start h bounded
+  obtain ⟨fetched, scan, fetchPath, fetchedRegion⟩ :=
+    bank_seek_path B data bits r source negative start h bounded
   have snap := h.toBankSnapshot.scan B scan
   have memory := snap.memory
   unfold BankMemory at memory
@@ -41,29 +44,28 @@ theorem bank_random (data : InputData I A) (bits : BitString) (r : ℕ)
     rw [table]
   let chosen : Configuration M :=
     {fetched with state := bankControl (.back q negative (negative j)), randomHead := source.randomHead + 1}
-  have available : source.randomHead < bits.length := (List.getElem?_eq_some_iff.mp lookup).1
-  have live : M.observe data bits fetched = .running fetched := by
-    simp [Machine.observe, action, snap.random, available]
   have next : M.next data bits fetched = .running chosen := by
     cases bit <;> simp [Machine.next, action, snap.random, lookup, chosen, q]
   have chosenSnap : BankSnapshot B advanced chosen :=
     ⟨snap.memory, snap.input, snap.auxiliary, snap.index, rfl, snap.output⟩
-  have advancedBound := B.choose_bounded data r source q bounded
+  have advancedBound : B.Bounded data r advanced :=
+    ⟨bounded.input, bounded.auxiliary, bounded.index, bounded.head⟩
   have chosenHead : chosen.workHead = signedPosition (negative j) position.natAbs :=
     scan.head.trans (signedPosition_natAbs position (negative j) (h.side j))
-  obtain ⟨returned, backScan, backRun⟩ := bank_back B data bits chosen q negative (negative j) position.natAbs
+  obtain ⟨returned, backScan, backPath, returnedRegion⟩ :=
+    bank_back_path B data bits chosen q negative (negative j) position.natAbs
     (chosenSnap.readHeadBounds B advancedBound) rfl chosenHead (fun i => by rw [chosenSnap.memory]; rfl)
   have returnedSnap := chosenSnap.scan B backScan
   have returnedMemory := returnedSnap.memory
   unfold BankMemory at returnedMemory
   let ready := workStep M data returned (bankControl (.seek q negative)) none .stay
-  have finishRun : M.runFrom data bits returned 1 = M.observe data bits ready := by
-    apply workStep_run
+  have finishPath : M.Steps data bits returned 1 ready := by
+    apply workStep_path
     rw [backScan.state]
     simp [M, chosen, bankMachine, bankTransition, backScan.head, returnedMemory, bankCell]
   have frame := workStep_frame M data returned (bankControl (.seek q negative)) none .stay
     (returnedSnap.readHeadBounds B advancedBound)
-  refine ⟨position.natAbs + (1 + (position.natAbs + 1)), ready, ?_, ?_, ?_⟩
+  refine ⟨position.natAbs + (1 + (position.natAbs + 1)), ready, ?_, ?_, ?_, ?_⟩
   · have := bounded.head j
     dsimp [position] at *
     omega
@@ -74,26 +76,32 @@ theorem bank_random (data : InputData I A) (bits : BitString) (r : ℕ)
     · rfl
     · exact backScan.head
     · exact h.side
-  · rw [M.runFrom_add _ _ _ fetched _ fetchRun]
-    rw [show 1 + (position.natAbs + 1) = (position.natAbs + 1) + 1 by omega,
-      M.runFrom_shift _ _ _ chosen live next]
-    rw [M.runFrom_add _ _ _ returned _ backRun]
-    exact finishRun
+  · exact fetchPath.trans M ((Machine.Steps.tail .refl next).trans M (backPath.trans M finishPath))
+  · intro s region radius
+    apply (returnedRegion s (fetchedRegion s region radius) radius).step M
+    change -(s : ℤ) ≤ returned.workHead ∧ returned.workHead ≤ s
+    rw [backScan.head]
+    constructor <;> omega
 
 /-- Observation of a terminal bank instruction, including actual random-tape
 exhaustion, requires only the scan to the selected virtual head. -/
-theorem bank_terminal (data : InputData I A) (bits : BitString) (r : ℕ)
+theorem bank_terminal_path (data : InputData I A) (bits : BitString) (r : ℕ)
     (source : BankConfiguration O Q S k) (negative : Fin k → Bool)
     (start : Configuration (bankMachine B)) (h : BankReady B source negative start)
-    (bounded : B.Bounded data r source) (result : Outcome O)
+    (bounded : B.Bounded data r source)
+    (result : Outcome O)
     (terminal :
       (B.instruction data source = .accept ∧ result = .accepted source.output) ∨
       (B.instruction data source = .reject ∧ result = .rejected) ∨
       (∃ no yes, B.instruction data source = .readRandom no yes ∧
         bits[source.randomHead]? = none ∧ result = .exhausted)) :
-    (bankMachine B).runFrom data bits start (source.head (B.select source.state)).natAbs = .halted result := by
-  obtain ⟨ready, scan, run⟩ := bank_seek B data bits r source negative start h bounded
-  rw [run]
+    ∃ ready, (bankMachine B).Steps data bits start (source.head (B.select source.state)).natAbs ready ∧
+      (bankMachine B).observe data bits ready = .halted result ∧
+      (∀ s, (bankMachine B).InRegion s start → (source.head (B.select source.state)).natAbs ≤ s →
+        (bankMachine B).InRegion s ready) := by
+  obtain ⟨ready, scan, path, visited⟩ :=
+    bank_seek_path B data bits r source negative start h bounded
+  refine ⟨ready, path, ?_, visited⟩
   have snap := h.toBankSnapshot.scan B scan
   have memory := snap.memory
   unfold BankMemory at memory
@@ -110,6 +118,37 @@ theorem bank_terminal (data : InputData I A) (bits : BitString) (r : ℕ)
     unfold TapeBank.instruction at table
     simp [Machine.observe, bankMachine, bankTransition, scan.state, h.state,
       scan.head, memory, bankCell, snap.input, snap.auxiliary, snap.index, table, snap.random, unavailable]
+
+/-- A random bank instruction uses one physical random read. The return scan
+preserves that cursor, all input heads, all work tapes and accumulated output. -/
+theorem bank_random (data : InputData I A) (bits : BitString) (r : ℕ)
+    (source : BankConfiguration O Q S k) (negative : Fin k → Bool)
+    (start : Configuration (bankMachine B)) (h : BankReady B source negative start)
+    (bounded : B.Bounded data r source) (no yes : Q) (bit : Bool)
+    (table : B.instruction data source = .readRandom no yes)
+    (lookup : bits[source.randomHead]? = some bit) :
+    ∃ ticks ready, ticks ≤ 2 * r + 4 ∧
+      BankReady B (TapeBank.choose source (if bit then yes else no)) negative ready ∧
+      (bankMachine B).runFrom data bits start ticks = (bankMachine B).observe data bits ready := by
+  obtain ⟨ticks, ready, cost, related, path, _⟩ :=
+    bank_random_path B data bits r source negative start h bounded no yes bit table lookup
+  exact ⟨ticks, ready, cost, related, path.runFrom (bankMachine B)⟩
+
+/-- Observation of a terminal bank instruction, including actual random-tape
+exhaustion, requires only the scan to the selected virtual head. -/
+theorem bank_terminal (data : InputData I A) (bits : BitString) (r : ℕ)
+    (source : BankConfiguration O Q S k) (negative : Fin k → Bool)
+    (start : Configuration (bankMachine B)) (h : BankReady B source negative start)
+    (bounded : B.Bounded data r source) (result : Outcome O)
+    (terminal :
+      (B.instruction data source = .accept ∧ result = .accepted source.output) ∨
+      (B.instruction data source = .reject ∧ result = .rejected) ∨
+      (∃ no yes, B.instruction data source = .readRandom no yes ∧
+        bits[source.randomHead]? = none ∧ result = .exhausted)) :
+    (bankMachine B).runFrom data bits start (source.head (B.select source.state)).natAbs = .halted result := by
+  obtain ⟨ready, path, observed, _⟩ :=
+    bank_terminal_path B data bits r source negative start h bounded result terminal
+  exact (path.runFrom (bankMachine B)).trans observed
 
 end
 end ComplexityOfGenerators.Simulation.TransducerBank

@@ -10,9 +10,9 @@ Membership in a polynomial-space generator's language is decided by midpoint
 search with polynomial recursion depth and polynomial-size configuration
 windows. All random-tape lengths, empty slices, and empty words are covered.
 
-This proves the mathematical search specification. The native implementation
-of the recursion stack, and its visited-cell bound, remain separate obligations
-before the forward inclusion in Theorem 6.1 can be concluded.
+This proves the mathematical search specification. The native recursion stack,
+configuration tests, and visited-cell bound are supplied by the development
+culminating in `PolynomialSpaceBase`, which concludes the forward inclusion.
 -/
 
 namespace ComplexityOfGenerators

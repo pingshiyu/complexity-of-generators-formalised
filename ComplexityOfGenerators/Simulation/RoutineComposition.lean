@@ -1,3 +1,4 @@
+import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.RandomTape
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Fintype.Sum
@@ -168,18 +169,9 @@ theorem sequence_right_next (data : InputData I A) (bits : BitString)
 theorem sequence_right_runFrom (data : InputData I A) (bits : BitString)
     (c : Configuration routine.machine) (t : ℕ) :
     (sequenceMachine M routine).runFrom data bits (sequenceRightConfiguration M routine c) t =
-      sequenceRightResult M routine (routine.machine.runFrom data bits c t) := by
-  induction t with
-  | zero => exact sequence_right_observe M routine data bits c
-  | succ t ih =>
-      simp only [Machine.runFrom, ih]
-      cases routine.machine.runFrom data bits c t with
-      | halted result => rfl
-      | running d =>
-          simp only [sequenceRightResult, sequence_right_next]
-          cases routine.machine.next data bits d with
-          | halted result => rfl
-          | running next => exact sequence_right_observe M routine data bits next
+      sequenceRightResult M routine (routine.machine.runFrom data bits c t) :=
+  Machine.runFrom_map (fun _ => rfl) (fun _ => rfl)
+    (sequence_right_observe M routine data bits) (sequence_right_next M routine data bits) c t
 
 /-- The ordinary `stay` instruction still applies the model's readonly-head
 clamping and visited-cell accounting. The work tape and random position persist. -/
