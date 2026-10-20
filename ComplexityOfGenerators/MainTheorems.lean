@@ -11,6 +11,7 @@ import ComplexityOfGenerators.Proofs.CertificateSchemeGeneration
 import ComplexityOfGenerators.Proofs.GeneratorNonclosure
 import ComplexityOfGenerators.Proofs.SpaceGeneration
 import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
+import ComplexityOfGenerators.Proofs.ExactRecursiveGeneration
 
 /-!
 # Every result marked “Theorem” in the supplied paper
@@ -20,8 +21,9 @@ Randomised Testing*. There are five numbered theorems. Each docstring below
 quotes its mathematical statement and identifies its printed page number.
 
 All five main theorems are proved in the retained finite-control machine model.
-Theorem 6.1 uses native Savitch configuration-graph search in the forward
-direction and the native cyclic generator in the reverse direction. Verified
+Theorem 6.1 uses verified space-preserving translations to Complexitylib’s
+Savitch decider in the forward direction and the native cyclic generator in
+the reverse direction. Verified
 complexity proofs are in `Simulation` and `Proofs`. There are no custom axioms
 asserting supporting complexity-theoretic results. In particular, Theorem 7.1
 uses the user-approved corrections to the certificate definitions: certified
@@ -90,5 +92,15 @@ theorem theorem_7_2_efficient_generators_are_not_composable :
     (NP Bool ≠ coNP Bool → ¬ ClosedUnderComplement (PG Bool)) ∧
     (CollisionResistantHashFunctionsExist → ¬ ClosedUnderIntersection (PG Bool)) :=
   ⟨pg_not_complement_closed, pg_not_intersection_closed⟩
+
+/-- **Proposition A.23.2, pp. 0:47–0:48.**
+If `L` is exactly recursively generable, then `L ∈ PG`.
+The construction uses the corrected optional stopping rule for reductions
+that preserve word length. Its finite native machine and polynomial running
+time are proved, including empty slices and the empty alphabet. -/
+theorem proposition_a23_2_exact_recursive_generation
+    {α : Type} [Fintype α] (L : Language α)
+    (h : ExactlyRecursivelyGenerable L) : L ∈ PG α :=
+  exactlyRecursivelyGenerable_mem_pg h
 
 end ComplexityOfGenerators

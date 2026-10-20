@@ -6,8 +6,8 @@ import ComplexityOfGenerators.Foundations.FiniteReachability
 
 The search is the verified midpoint algorithm on bounded decision views. Its
 recursion depth is an explicit exponent of the configuration count. This
-module specifies the search; the stack bounds and native implementation are
-supplied by the development culminating in `Proofs.PolynomialSpaceBase`.
+module specifies the search. The machine-level containment in
+`Proofs.PolynomialSpaceBase` now uses verified translations to library Savitch.
 -/
 
 namespace ComplexityOfGenerators.Machine

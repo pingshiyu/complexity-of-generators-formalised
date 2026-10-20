@@ -6,8 +6,13 @@ import ComplexityOfGenerators.Foundations.BasicTheorems
 
 The local model and Complexitylib use different input, output, random-choice and
 space conventions. These interfaces state the comparison work still required;
-they are NOT populated by an assumed instance or an unfinished proof. Main
-theorem statements keep their existing meanings.
+they are NOT populated by an assumed instance or an unfinished proof. The
+deterministic space inclusion `Standard.PSPACE ⊆ PSPACE Bool` is now proved in
+`Proofs.LibrarySpace`, including finite-alphabet input transport. The native
+forward direction of Theorem 6.1 now composes `Simulation.NativeNTM.Space` with
+that compiler, using library reachability without an all-path halting premise.
+The full comparison interfaces below remain unfilled.
+Main theorem statements keep their existing meanings.
 
 Classical theorems in `Standard` are unconditional and kernel checked. Transport
 to local classes is conditional on a proved model comparison. Keeping that
@@ -37,8 +42,10 @@ theorem co_np_agreement (bridge : DecisionClassAgreement) : coNP Bool = Standard
 
 end DecisionClassAgreement
 
-/-- The two generator simulations needed to use imported Savitch:
-generation to nondeterministic recognition, and decision to generation.
+/-- An alternative route through the library’s all-branches-halting NPSPACE
+class: generation to nondeterministic recognition, and decision to generation.
+The completed forward proof instead uses bounded reachability directly, so
+these comparisons are not premises of any main theorem.
 The fields are construction goals, not global axioms. -/
 structure SpaceGenerationBridge where
   generationToRecognition : PSPACEG Bool ⊆ Standard.NPSPACE

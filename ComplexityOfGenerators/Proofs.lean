@@ -18,14 +18,9 @@ import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
 import ComplexityOfGenerators.Proofs.EmptyWordGeneration
 import ComplexityOfGenerators.Proofs.NativeSpaceContainment
 import ComplexityOfGenerators.Proofs.NativeSpaceCompilation
+import ComplexityOfGenerators.Proofs.LibrarySpace
 import ComplexityOfGenerators.Proofs.PolynomialSpaceSearch
 import ComplexityOfGenerators.Proofs.SpaceGeneration
-import ComplexityOfGenerators.Proofs.PolynomialSpaceStack
-import ComplexityOfGenerators.Proofs.PolynomialSpaceFrames
-import ComplexityOfGenerators.Proofs.PolynomialSpaceExecution
-import ComplexityOfGenerators.Proofs.PolynomialSpaceInitialization
-import ComplexityOfGenerators.Proofs.PolynomialSpaceDecision
-import ComplexityOfGenerators.Proofs.PolynomialSpaceBaseBounds
 import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
 import ComplexityOfGenerators.Proofs.CyclicSelection
 import ComplexityOfGenerators.Proofs.PolynomialVerifiers
@@ -35,6 +30,13 @@ import ComplexityOfGenerators.Proofs.CertificateSchemeGeneration
 import ComplexityOfGenerators.Proofs.ConstantBitGeneration
 import ComplexityOfGenerators.Proofs.ClosureArguments
 import ComplexityOfGenerators.Proofs.GeneratorNonclosure
+import ComplexityOfGenerators.Proofs.ExactRecursiveSampling
+import ComplexityOfGenerators.Proofs.ExactRecursiveStopping
+import ComplexityOfGenerators.Proofs.WordStackGenerators
+import ComplexityOfGenerators.Proofs.ExactRecursiveGeneration
 
-/-! Completed components of the main proofs. This module contains no unfinished
-proofs; `MainTheorems` assembles the five completed theorem statements. -/
+/-! Completed components of the main proofs and Appendix A.23. This module
+contains no unfinished proofs; `MainTheorems` assembles the five completed
+theorem statements and Proposition A.23.2. Exact recursive generation uses a
+verified finite stack program, polynomial instruction bounds, and the proved
+stack-to-native compiler. -/

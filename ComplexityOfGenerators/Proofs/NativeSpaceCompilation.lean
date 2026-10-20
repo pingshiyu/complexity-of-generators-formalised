@@ -1,4 +1,5 @@
 import ComplexityOfGenerators.Simulation.TransducerBank.Space
+import ComplexityOfGenerators.Foundations.InputAlphabet
 
 /-!
 # Polynomial-space decision by finite tape-bank programs
@@ -14,6 +15,46 @@ namespace ComplexityOfGenerators
 open Simulation.TransducerBank
 
 noncomputable section
+
+/-- A bounded terminating path on each encoded input suffices for native
+polynomial-space decision. Determinism bounds every prefix, and the input
+adapter preserves the exact visited-cell set. No behaviour on other source
+inputs is required. -/
+theorem mem_pspace_of_encoded_terminal_paths {I S : Type} [Fintype I]
+    (source : Machine S Bool Unit) (encode : I → S) (L : Language I)
+    (p : PolynomialBound) (deterministic : source.Deterministic)
+    (complete : ∀ word : Word I, ∀ bits : BitString, ∃ ticks last verdict,
+      source.Steps (decisionData (word.map encode)) bits source.initialConfiguration ticks last ∧
+      source.observe (decisionData (word.map encode)) bits last =
+        .halted (if verdict then .accepted [] else .rejected) ∧
+      last.visited.card ≤ p word.length ∧ (verdict = true ↔ word ∈ L)) : L ∈ PSPACE I := by
+  let M := source.mapInput encode
+  have runs (word : Word I) : ∃ ticks verdict,
+      M.run (decisionData word) [] ticks = .halted (if verdict then .accepted [] else .rejected) ∧
+      (verdict = true ↔ word ∈ L) := by
+    obtain ⟨ticks, last, verdict, path, terminal, _, correct⟩ := complete word []
+    refine ⟨ticks, verdict, ?_, correct⟩
+    apply (source.mapInput_run_halted_iff encode (decisionData word) [] ticks _).mpr
+    change source.run (decisionData (word.map encode)) [] ticks = _
+    rw [← Machine.runFrom_initial, path.runFrom source, terminal]
+  refine ⟨M, p, source.mapInput_deterministic encode deterministic, ?_, ?_, ?_⟩
+  · intro word
+    obtain ⟨ticks, verdict, run, _⟩ := runs word
+    exact ⟨ticks, _, run⟩
+  · intro word
+    apply source.mapInput_spaceBound encode
+    apply Machine.spaceBound_of_terminal_paths
+    intro bits
+    obtain ⟨ticks, last, verdict, path, terminal, size, _⟩ := complete word bits
+    exact ⟨ticks, last, _, path, terminal, size⟩
+  · intro word
+    obtain ⟨ticks, verdict, run, correct⟩ := runs word
+    constructor
+    · rintro ⟨out, t, accepted⟩
+      have same := M.halted_outcome_unique _ _ _ _ _ _ accepted run
+      cases verdict <;> simp_all
+    · intro member
+      exact ⟨[], ticks, by simpa [correct.mpr member] using run⟩
 
 variable {α Q S : Type} {k : ℕ} [Fintype α] [Fintype Q] [Fintype S]
 

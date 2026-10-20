@@ -5,7 +5,8 @@ import Lean.Util.CollectAxioms
 /-!
 Checks every declaration in the local supporting modules, including transitive
 dependencies of imported Cook–Levin, Savitch and cryptographic proofs. Also
-checks all five main theorems, including both directions of Theorem 6.1.
+checks all five main theorems, including both directions of Theorem 6.1,
+and Proposition A.23.2 with its finite generator and polynomial time bound.
 No local declaration is excluded.
 
 Run after `lake build`: `lake env lean scripts/AuditFoundations.lean`.

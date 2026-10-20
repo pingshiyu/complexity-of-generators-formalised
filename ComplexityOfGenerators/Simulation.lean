@@ -20,6 +20,11 @@ import ComplexityOfGenerators.Simulation.TranscriptReplaySoundness
 import ComplexityOfGenerators.Simulation.TranscriptSamplerCorrectness
 import ComplexityOfGenerators.Simulation.RejectDrain
 import ComplexityOfGenerators.Simulation.DecisionComplement
+import ComplexityOfGenerators.Simulation.LibraryTM.Alphabet.Native
+import ComplexityOfGenerators.Simulation.NativeNTM.Space
+import ComplexityOfGenerators.Simulation.WordStack.Compiler
+import ComplexityOfGenerators.Simulation.ExactRecursive.Execution
+import ComplexityOfGenerators.Simulation.ExactRecursive.TableBridge
 
 /-! Verified finite-control simulations, including input loading, finite-support
 restriction, and composition with Mathlib's recursive-program compiler. -/
