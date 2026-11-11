@@ -12,6 +12,7 @@ import ComplexityOfGenerators.Proofs.GeneratorNonclosure
 import ComplexityOfGenerators.Proofs.SpaceGeneration
 import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
 import ComplexityOfGenerators.Proofs.ExactRecursiveGeneration
+import ComplexityOfGenerators.Proofs.ELEPGCollision
 
 /-!
 # Every result marked “Theorem” in the supplied paper
@@ -102,5 +103,28 @@ theorem proposition_a23_2_exact_recursive_generation
     {α : Type} [Fintype α] (L : Language α)
     (h : ExactlyRecursivelyGenerable L) : L ∈ PG α :=
   exactlyRecursivelyGenerable_mem_pg h
+
+/-- Expected-length extension of collision non-generability, using the same
+native machine model and unkeyed uniform collision-resistance assumption.
+No variance or concentration hypothesis is imposed. -/
+theorem theorem_expected_length_collision_non_generability
+    (h : HashFunction) (secure : h.CollisionResistant) :
+    h.binaryCollisionLanguage ∉ ELEPG Bool :=
+  h.binaryCollisionLanguage_not_mem_elepg secure
+
+/-- ELEPG generators are not closed under intersection if collision-resistant
+hashes exist. The reduction constructs an actual polynomial-time attacker. -/
+theorem theorem_expected_length_generators_are_not_composable
+    (hashes : CollisionResistantHashFunctionsExist) :
+    ¬ ClosedUnderIntersection (ELEPG Bool) :=
+  elepg_not_intersection_closed hashes
+
+/-- The nonclosure witness has an infinite intersection, independently of the
+convention excluding finite languages from ELEPG. -/
+theorem theorem_expected_length_infinite_intersection_nonclosure
+    (hashes : CollisionResistantHashFunctionsExist) :
+    ∃ A B : Language Bool, A ∈ ELEPG Bool ∧ B ∈ ELEPG Bool ∧
+      (A ∩ B).Infinite ∧ A ∩ B ∉ ELEPG Bool :=
+  elepg_infinite_intersection_witness hashes
 
 end ComplexityOfGenerators

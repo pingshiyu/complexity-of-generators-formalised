@@ -25,6 +25,7 @@ import ComplexityOfGenerators.Simulation.NativeNTM.Space
 import ComplexityOfGenerators.Simulation.WordStack.Compiler
 import ComplexityOfGenerators.Simulation.ExactRecursive.Execution
 import ComplexityOfGenerators.Simulation.ExactRecursive.TableBridge
+import ComplexityOfGenerators.Simulation.ExpectedCollisionSearchExecution
 
 /-! Verified finite-control simulations, including input loading, finite-support
 restriction, and composition with Mathlib's recursive-program compiler. -/

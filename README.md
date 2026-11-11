@@ -23,6 +23,13 @@ under complement; independently, collision-resistant hashes imply that `PG` is
 not closed under intersection. Both proofs use native machines and verified
 polynomial bounds.
 
+**Expected-length extension:** the development also defines `ELEPG` and extends
+the collision and intersection arguments to expected output length and expected
+polynomial runtime. Both results are proved using an actual uniformly
+polynomial-time native collision finder, including an infinite-intersection
+nonclosure witness. The public statements are described below. This extension uses
+the same unkeyed, uniform collision-resistance assumption and no variance bound.
+
 **Theorem 6.1 is completely proved:** `PSPACEG α = PSPACE α` for every finite
 alphabet. The forward direction uses verified machine translations and
 Complexitylib's Savitch decider; the reverse direction implements the paper's
@@ -69,6 +76,89 @@ reuses the tape-bank simulator: `t` primitive stack instructions take at most
 [command generator criterion](ComplexityOfGenerators/Proofs/CommandGenerators.lean)
 then establishes membership in `PG`. No `sorry`, custom axiom, or assumed
 compiler is used.
+
+## Expected-length collision and nonclosure extension
+
+[StreamSemantics.lean](ComplexityOfGenerators/Foundations/StreamSemantics.lean)
+derives output length and runtime from the actual native evaluator on the
+fair-coin stream. Output length is zero on divergence; runtime is infinite
+there. Both quantities are measurable. Runtime counts native transitions,
+including initialization and ordinary machine work, rather than merely random
+bits consumed.
+[StreamPrefixExecution.lean](ComplexityOfGenerators/Foundations/StreamPrefixExecution.lean)
+proves that an accepting execution within `t` transitions is reproduced using
+the stream's first `t + 1` bits. These are operational facts, not an assumed
+simulation interface.
+
+[ExpectedGenerators.lean](ComplexityOfGenerators/ExpectedGenerators.lean)
+defines `ELEPG` using an infinite language and one uniform native generator
+family. Its output has expected length exactly `i` at index `i`. Runtime has a
+uniform polynomial expectation on nonempty layers, and every supported word
+also has a polynomially short accepting execution, retaining the manuscript's
+expected-time convention. No variance, concentration, or prescribed output
+distribution is required. An exact-length `PG` generator with a nonempty slice
+at every index is an `ELEPG` generator on the same machine; this is the proved
+`pg_mem_elepg_of_nonempty_slices` conversion, not an unrestricted inclusion of
+all `PG` languages in `ELEPG`.
+
+[ExpectedLengthBounds.lean](ComplexityOfGenerators/Foundations/ExpectedLengthBounds.lean)
+proves the first-moment estimate: if the expected length is `i ≥ 5`, some
+`m` satisfies `i ≤ 2*m` and has probability at least `1/(m+1)^3`.
+These heavy lengths are unbounded even if the mean condition is required only
+at sufficiently large indices. The shifted denominator handles size zero
+without an exception. The proof uses an elementary telescoping bound on
+reciprocal squares. A separate Markov-plus-event-subtraction argument shows
+that a sufficiently large polynomial clock preserves at least half a heavy
+atom's mass; it assumes no independence between length and runtime.
+
+[ExpectedCollisionReduction.lean](ComplexityOfGenerators/Proofs/ExpectedCollisionReduction.lean)
+turns those bounds into inverse-polynomial collision success at infinitely
+many security parameters. For the binary collision encoding, parameter `n`
+corresponds to output length `m = 4*(n+1)+2`. The reduction considers virtual
+generator indices up to `2*m` and uses a polynomial clock dominating
+`2*(m+1)^3*p(2*m)`. Its strict success threshold and infinitely-many-parameters
+quantifier match `HashFunction.CollisionResistant` exactly. The reduction also
+permits the empty word as an additional source output, which is needed below.
+
+The bounded-search implementation in
+[ExpectedCollisionSearch.lean](ComplexityOfGenerators/Simulation/ExpectedCollisionSearch.lean)
+collects one finite random block and replays the **same** block at every virtual
+index. It is sufficient that the successful source index sees a fair prefix;
+the trials need not be independent. Each call has an isolated finite seed and
+an explicit simulation clock. The controller uses primitive word-stack
+instructions and the existing finite native-machine compiler. Its
+[bounds](ComplexityOfGenerators/Simulation/ExpectedCollisionSearchBounds.lean)
+account for source simulation, scanning, copying, counters and output.
+[ExpectedCollisionSearchExecution.lean](ComplexityOfGenerators/Simulation/ExpectedCollisionSearchExecution.lean)
+proves termination and exact output on every finite seed, including exhaustion
+on short seeds.
+[ExpectedCollisionFinder.lean](ComplexityOfGenerators/Proofs/ExpectedCollisionFinder.lean)
+constructs the native `CollisionFinder` and discharges the simulation obligation.
+
+[ExpectedGeneratorNonclosure.lean](ComplexityOfGenerators/Proofs/ExpectedGeneratorNonclosure.lean)
+constructs the intersection witnesses with the existing native fallback
+generators. Put `C = h.binaryCollisionLanguage` and `K = C ∪ {ε}`. Then
+`A = K ∪ 0⁺` and `B = K ∪ 1⁺` have exact-length polynomial generators and
+nonempty slices at every index, including zero, so both are in `ELEPG`.
+Their intersection is exactly `K`, which is infinite. Excluding `K` with the
+stronger collision reduction therefore shows that `ELEPG` fails intersection
+closure even when the intersection is infinite; the obstruction is not merely
+the definition's exclusion of finite languages.
+
+The public theorem API in
+[ELEPGCollision.lean](ComplexityOfGenerators/Proofs/ELEPGCollision.lean) is:
+
+- `HashFunction.binaryCollisionLanguage_not_mem_elepg`;
+- `elepg_not_intersection_closed`;
+- `elepg_infinite_intersection_witness`.
+
+The first rules out an `ELEPG` collision generator under collision resistance.
+The latter two express class nonclosure and the stronger infinite-intersection
+witness. `HashFunction.expected_collision_tail_impossible` also proves the
+stronger obstruction when mean and expected-runtime requirements hold only at
+sufficiently large indices, while outputs are globally collisions or the empty
+word. The main results have no added simulation premise. Their complete proof
+dependencies are included in the foundations axiom audit.
 
 ## Build
 
@@ -446,9 +536,11 @@ lake env lean scripts/CheckLibraryTM.lean
 lake env lean scripts/CheckSavitchTranslation.lean
 ```
 
-The full build, both check scripts and the foundations axiom audit pass.
-The audit checked 11,022 local production declaration records and their transitive
-axiom dependencies, including the five main theorems and Proposition A.23.2. It permits only `propext`,
+The full build, both check scripts and the foundations axiom audit pass,
+including the ELEPG extension. The audit checked 11,451 local production
+declaration records and their transitive axiom dependencies, including the
+five original main theorems, Proposition A.23.2 and the expected-length
+collision and infinite-intersection nonclosure results. It permits only `propext`,
 `Classical.choice`, and `Quot.sound`. There are no admitted proofs or custom axioms.
 
 ## Theorem correspondence
@@ -464,11 +556,20 @@ Every declaration includes the paper's statement and number in its docstring.
 | Theorem 7.1, 0:24 | `theorem_7_1_generators_are_certificate_schemes` | `L ∈ PG α ↔ ∃ V : PolynomialVerifier L, HasCertificateScheme V`. The verifier is existential, and `L ∈ NP` is not an extra hypothesis. |
 | Theorem 7.2, 0:25 | `theorem_7_2_efficient_generators_are_not_composable` | `NP Bool ≠ coNP Bool` implies failure of complement closure; independently, collision-resistant hashes imply failure of intersection closure. |
 | Proposition A.23.2, 0:47–0:48 | `proposition_a23_2_exact_recursive_generation` | `ExactlyRecursivelyGenerable L → L ∈ PG α`, using the corrected optional stopping rule and a verified finite native generator. |
+| ELEPG collision extension | `theorem_expected_length_collision_non_generability` | A collision-resistant `h` has `h.binaryCollisionLanguage ∉ ELEPG Bool`. |
+| ELEPG nonclosure extension | `theorem_expected_length_generators_are_not_composable` | Collision-resistant hashes imply that `ELEPG Bool` is not closed under intersection. |
+| ELEPG infinite-intersection extension | `theorem_expected_length_infinite_intersection_nonclosure` | Two ELEPG languages have an infinite intersection outside ELEPG, under collision resistance. |
 
-The scope includes the five main theorems, Proposition A.23.2, and their supporting
-definitions and proofs, rather than every result in the paper. In particular, expected-time
-generation (`EPG`, Definitions 5.6–5.7), log-space generation (`LG`, Definition
-6.1), and the function-oracle machinery (Definitions 6.4–6.7) are not formalised.
+The original scope includes the five main theorems, Proposition A.23.2, and
+their supporting definitions and proofs, rather than every result in the paper.
+The additional `ELEPG` development above defines expected-length,
+expected-polynomial-time generation and proves collision non-generability and
+infinite-intersection nonclosure with the concrete native collision finder.
+The exact-length expected-time class `EPG`
+(Definitions 5.6–5.7), log-space generation (`LG`, Definition 6.1), and the
+function-oracle machinery (Definitions 6.4–6.7) remain outside the formalised
+class inventory. The expected-length undecidable-language example is not part
+of this extension.
 Some lemmas, propositions, corollaries, examples, remarks, and other authors'
 theorems are included as supporting material; the table above is not an
 inventory of those results.
