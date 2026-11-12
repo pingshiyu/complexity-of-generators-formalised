@@ -1,6 +1,9 @@
 import ComplexityOfGenerators.Simulation.ExactRecursive.Program
+import ComplexityOfGenerators.Simulation.WordStack.BoundedSource
 
 namespace ComplexityOfGenerators.Simulation.ExactRecursive
+
+/-! Compatibility wrappers around the shared bounded-source implementation. -/
 
 open WordStack
 
@@ -24,19 +27,14 @@ def trialPrepared (seed time : PolynomialBound) (s : Store B V) : Store B V :=
 
 theorem trialSetup_eval (seed time : PolynomialBound) (s : Store B V) :
     (trialSetup B V seed time).eval s = trialPrepared B V seed time s := by
-  funext j
-  fin_cases j <;>
-    simp [trialSetup, trialPrepared, WordStack.Routine.seq, counter, CounterRoutine.routine_eval,
-      Blocks.routine_eval (k := 35) 18 17 14 (by decide) (by decide) (by decide),
-      WordStack.Routine.ofLocal, Local.eval_push, List.replicate_succ]
+  exact BoundedSource.trialSetup_eval (O := α) (Symbol.unit : Cell B V) Symbol.bit seed time s
 
 theorem sourceTrial_eval {I A : Type} (M : Machine I A α)
     (encode : Source.Symbol M → Cell B V) (decode : Cell B V → Source.Symbol M)
     (f g b : Cell B V → Cell B V) (seed time : PolynomialBound) (s : Store B V) :
     (sourceTrial B V M encode decode f g b seed time).eval s =
       (Source.call (Output := α) M sourceSlots encode decode f g b).eval (trialPrepared B V seed time s) := by
-  rw [← trialSetup_eval]
-  rfl
+  exact BoundedSource.sourceTrial_eval (O := α) (Symbol.unit : Cell B V) Symbol.bit M encode decode f g b seed time s
 
 theorem sourceTrial_bank {I A : Type} (M : Machine I A α)
     (encode : Source.Symbol M → Cell B V) (decode : Cell B V → Source.Symbol M)
@@ -49,17 +47,8 @@ theorem sourceTrial_bank {I A : Type} (M : Machine I A α)
     (sourceTrial B V M encode decode f g b seed time).eval s ∘ Source.bank sourceSlots =
       Local.mapStore encode (((Source.Snapshot.step M)^[time data.index + 1]
         (Source.initial M data (bits.take (seed data.index)))).store M) := by
-  rw [sourceTrial_eval]
-  have result := Source.call_bank (Output := α) M sourceSlots encode decode retract f g b
-    (trialPrepared B V seed time s) data (bits.take (seed data.index))
-    (by simpa [trialPrepared] using input_eq)
-    (by simpa [trialPrepared] using auxiliary_eq)
-    (by simpa [trialPrepared] using index_eq)
-    (by simp [trialPrepared, random_eq, empty, index_eq, List.map_take, List.map_map, Function.comp_def, bitCode])
-  have clock : ((trialPrepared B V seed time s) (sourceSlots 16)).length = time data.index + 1 := by
-    change ((trialPrepared B V seed time s) 16).length = _
-    simp [trialPrepared, index_eq]
-  simpa only [clock] using result
+  exact BoundedSource.sourceTrial_bank (O := α) (Symbol.unit : Cell B V) Symbol.bit M encode decode retract f g b bitCode
+    seed time s data bits input_eq auxiliary_eq index_eq random_eq empty
 
 theorem sourceTrial_outside {I A : Type} (M : Machine I A α)
     (encode : Source.Symbol M → Cell B V) (decode : Cell B V → Source.Symbol M)
@@ -67,13 +56,8 @@ theorem sourceTrial_outside {I A : Type} (M : Machine I A α)
     (j : Fin 35) (outside : 11 ≤ j.val) (clock : j ≠ 16) :
     (sourceTrial B V M encode decode f g b seed time).eval s j =
       if j = 14 ∨ j = 15 then [] else trialPrepared B V seed time s j := by
-  rw [sourceTrial_eval]
-  apply Source.call_frame
-  · intro i equal
-    have same := congrArg Fin.val equal
-    change j.val = i.val at same
-    omega
-  · exact clock
+  exact BoundedSource.sourceTrial_outside (O := α) (Symbol.unit : Cell B V) Symbol.bit M encode decode f g b
+    seed time s j outside clock
 
 theorem sourceTrial_result {I A : Type} (M : Machine I A α)
     (encode : Source.Symbol M → Cell B V) (decode : Cell B V → Source.Symbol M)
@@ -88,26 +72,7 @@ theorem sourceTrial_result {I A : Type} (M : Machine I A α)
       (sourceTrial B V M encode decode f g b seed time).eval s 10 = output.map (fun a => encode (.output a)) ∧
       ∀ word, (status = .accepted ∧ output.reverse = word) ↔
         M.run data (bits.take (seed data.index)) (time data.index) = .halted (.accepted word) := by
-  let snapshot := (Source.Snapshot.step M)^[time data.index + 1]
-    (Source.initial M data (bits.take (seed data.index)))
-  have projection := sourceTrial_bank B V M encode decode retract f g b bitCode seed time s data bits
-    input_eq auxiliary_eq index_eq random_eq empty
-  refine ⟨snapshot.status, snapshot.output, ?_, ?_, ?_⟩
-  · have state := congrFun projection (0 : Fin 11)
-    exact state
-  · have output := congrFun projection (10 : Fin 11)
-    change (sourceTrial B V M encode decode f g b seed time).eval s 10 =
-      (snapshot.output.map Source.Cell.output).map encode at output
-    simpa only [List.map_map, Function.comp_def] using output
-  · intro word
-    constructor
-    · rintro ⟨state, out⟩
-      apply (Source.iterate_accept_iff M data (bits.take (seed data.index)) (time data.index) word).mp
-      change snapshot.acceptedOutput = some word
-      simp only [Source.Snapshot.acceptedOutput, state, out]
-    · intro run
-      obtain ⟨state, out⟩ := Source.iterate_accept M data (bits.take (seed data.index)) (time data.index) word run
-      change snapshot.output = word.reverse at out
-      exact ⟨state, by rw [out, List.reverse_reverse]⟩
+  exact BoundedSource.sourceTrial_result (O := α) (Symbol.unit : Cell B V) Symbol.bit M encode decode retract f g b bitCode
+    seed time s data bits input_eq auxiliary_eq index_eq random_eq empty
 
 end ComplexityOfGenerators.Simulation.ExactRecursive

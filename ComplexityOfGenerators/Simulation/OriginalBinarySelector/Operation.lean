@@ -1,0 +1,3 @@
+namespace ComplexityOfGenerators.Simulation.OriginalBinarySelector
+inductive Operation | union | concatenation
+end ComplexityOfGenerators.Simulation.OriginalBinarySelector

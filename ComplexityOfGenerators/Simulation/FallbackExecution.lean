@@ -33,6 +33,7 @@ theorem fallback_after_sample (n : ℕ) (bits word : BitString) (live : n ≠ 0 
   have handoff := composition_handoff wordSampler R n bits c (by simpa [generatorData] using action)
   rw [output] at handoff
   have recovered : R.run (generatorData n word) (bits.drop c.randomHead) t = .halted (auxiliaryDecisionOutcome result) := by
+    change R.run (certificateData n word) (bits.drop c.randomHead) t = _
     rw [auxiliaryDecision_run, decision]; rfl
   have shifted := R.runFrom_drop_random (generatorData n word) bits c.randomHead t randomBound
   rw [recovered] at shifted

@@ -7,15 +7,15 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} [Fintype α] (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} [Fintype α] [Fintype β] (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 def samplerComposition : Machine Unit Bool α := TransducerBank.bankMachine (samplerCompositionBank S R)
 
 def CompositionOutcome (n : ℕ) : Outcome α → Prop
   | .accepted word => ∃ certificate, certificate ∈ S.generatedLanguage (generatorData n) ∧
-      word ∈ R.generatedLanguage (generatorData n certificate)
+      word ∈ R.generatedLanguage (certificateData n certificate)
   | .rejected => ∃ certificate, certificate ∈ S.generatedLanguage (generatorData n) ∧
-      ∃ bits t, R.run (generatorData n certificate) bits t = .halted .rejected
+      ∃ bits t, R.run (certificateData n certificate) bits t = .halted .rejected
   | .exhausted => True
 
 /-- Total finite-bank execution and support preservation. Explicit failure of
@@ -24,7 +24,7 @@ be inherited from a genuine recovery call on a sampled certificate. -/
 theorem composition_executes (n sampleTime recoveryTime : ℕ) (bits : BitString)
     (sample : S.TimeBound (generatorData n) sampleTime)
     (recover : ∀ certificate, certificate ∈ S.generatedLanguage (generatorData n) →
-      R.TimeBound (generatorData n certificate) recoveryTime) :
+      R.TimeBound (certificateData n certificate) recoveryTime) :
     ∃ ticks result, ticks ≤ 3 * n + 5 * sampleTime + 5 * recoveryTime + bits.length + 10 ∧
       (samplerCompositionBank S R).Executes (generatorData n) bits (samplerCompositionBank S R).initialConfiguration ticks result ∧
       CompositionOutcome S R n result := by
@@ -38,9 +38,9 @@ theorem composition_executes (n sampleTime recoveryTime : ℕ) (bits : BitString
         ⟨bits ++ [false], by simp, S.produces_append _ bits [false] certificate ⟨sampleTime, source⟩⟩
       have length := S.accepted_output_length_le _ bits sampleTime certificate source
       obtain ⟨result, recovered⟩ := recover certificate sampled (bits.drop terminal.randomHead)
-      have shifted := R.runFrom_drop_random (generatorData n certificate) bits terminal.randomHead recoveryTime randomBound
+      have shifted := R.runFrom_drop_random (certificateData n certificate) bits terminal.randomHead recoveryTime randomBound
       rw [recovered] at shifted
-      have handoff := composition_handoff S R n bits terminal (by simpa [generatorData] using action)
+      have handoff := composition_handoff S R n bits terminal (by simpa [generatorData, certificateData] using action)
       rw [output] at handoff
       obtain ⟨recoveryTicks, recoveryCost, execution⟩ := composition_recoverer_executes S R n certificate bits
         terminal.work terminal.workHead {R.initialConfiguration with randomHead := terminal.randomHead}
@@ -65,7 +65,7 @@ randomness for a bounded genuine recovery generator. -/
 theorem composition_accepts_long (n sampleTime recoveryTime : ℕ) (bits : BitString)
     (sample : S.TimeBound (generatorData n) sampleTime) (accepted : S.Accepts (generatorData n) bits)
     (recover : ∀ certificate, certificate ∈ S.generatedLanguage (generatorData n) →
-      R.IsGenerator (generatorData n certificate) ∧ R.TimeBound (generatorData n certificate) recoveryTime)
+      R.IsGenerator (certificateData n certificate) ∧ R.TimeBound (certificateData n certificate) recoveryTime)
     (long : 2 * n + 4 * sampleTime + recoveryTime + 3 < bits.length) :
     (samplerComposition S R).Accepts (generatorData n) bits := by
   obtain ⟨certificate, produced⟩ := accepted
@@ -78,9 +78,9 @@ theorem composition_accepts_long (n sampleTime recoveryTime : ℕ) (bits : BitSt
   obtain ⟨word, recovered⟩ := R.accepts_at_timeBound_of_long_tape _ recoveryTime
     (recover certificate sampled).1 (recover certificate sampled).2 (bits.drop terminal.randomHead)
     (by simp only [List.length_drop]; omega)
-  have shifted := R.runFrom_drop_random (generatorData n certificate) bits terminal.randomHead recoveryTime randomBound
+  have shifted := R.runFrom_drop_random (certificateData n certificate) bits terminal.randomHead recoveryTime randomBound
   rw [recovered] at shifted
-  have handoff := composition_handoff S R n bits terminal (by simpa [generatorData] using action)
+  have handoff := composition_handoff S R n bits terminal (by simpa [generatorData, certificateData] using action)
   rw [output] at handoff
   obtain ⟨recoveryTicks, _, execution⟩ := composition_recoverer_executes S R n certificate bits
     terminal.work terminal.workHead {R.initialConfiguration with randomHead := terminal.randomHead}

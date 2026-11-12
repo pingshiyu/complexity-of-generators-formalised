@@ -31,6 +31,15 @@ theorem assign (h : StoreBound s budget) (src dst scratch : Fin k)
   rw [Routine.assign_eval]
   exact (h.clear scratch).update dst _ (by simpa using h src)
 
+
+theorem clearMany (h : StoreBound s budget) (registers : List (Fin k)) :
+    StoreBound ((Routine.clearMany (O := O) registers).eval s) budget := by
+  rw [Routine.clearMany_eval]
+  intro j
+  by_cases member : j ∈ registers
+  · simp [member]
+  · simpa [member] using h j
+
 theorem counter (h : StoreBound s budget) (slots : CounterRoutine.Layout k) (p : PolynomialBound) (unit : S)
     (base : (s (slots 0)).length + 1 ≤ budget) (value : p (s (slots 0)).length ≤ budget) :
     StoreBound ((CounterRoutine.routine (O := O) slots p unit).eval s) budget := by

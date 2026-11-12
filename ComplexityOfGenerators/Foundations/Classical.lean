@@ -14,7 +14,8 @@ are binary words, with malformed encodings included in the universe.
 
 The paper's generator machines have different tape conventions. The existing
 local decision definitions have NOT yet been identified with these imported
-classes; see `ModelBridge`. No equality of machine models is assumed implicitly.
+classes. No equality of machine models is assumed implicitly; the verified
+translations used by native theorems are supplied at their call sites.
 -/
 
 namespace ComplexityOfGenerators.Standard

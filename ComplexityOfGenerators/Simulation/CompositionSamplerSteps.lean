@@ -6,7 +6,7 @@ noncomputable section
 set_option backward.isDefEq.respectTransparency false
 set_option maxRecDepth 4096
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 open TransducerBank
 
@@ -22,7 +22,7 @@ theorem composition_sampler_fetch (n : ℕ) (bits : BitString) (c : Configuratio
 certificate buffer. Their order introduces no whole-word primitive. -/
 theorem composition_sampler_step (n : ℕ) (bits : BitString) (c : Configuration S)
     (indexBound : c.indexHead ≤ n)
-    (next : Fin S.states) (write : Option (Fin S.symbols)) (work input auxiliary index : Move) (emit : Option Bool)
+    (next : Fin S.states) (write : Option (Fin S.symbols)) (work input auxiliary index : Move) (emit : Option β)
     (action : S.transition c.state none none (if c.indexHead < n then some () else none) (c.work c.workHead) =
       .step next write work input auxiliary index emit) :
     (samplerCompositionBank S R).Steps (generatorData n) bits

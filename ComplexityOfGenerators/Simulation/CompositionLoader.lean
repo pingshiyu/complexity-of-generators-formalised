@@ -6,7 +6,7 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 @[simp] theorem compositionIndex_zero : compositionIndex S R 0 = fun _ => {} := by
   funext i

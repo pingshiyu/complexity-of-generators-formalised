@@ -1,5 +1,6 @@
 import ComplexityOfGenerators.Foundations.RunSimulation
 import ComplexityOfGenerators.Foundations.ExecutionBounds
+import ComplexityOfGenerators.Simulation.SamplerComposition
 
 /-! A native decider reading its word from the auxiliary tape. Its ordinary
 input and family-index tapes are ignored; decision output is discarded. -/
@@ -8,12 +9,12 @@ namespace ComplexityOfGenerators.Simulation
 
 set_option backward.isDefEq.respectTransparency false
 
-variable (M : Machine Bool Bool Unit)
+variable {α : Type} (M : Machine α Bool Unit)
 
-def auxiliaryDecision : Machine Unit Bool Bool where
+def auxiliaryDecision : Machine Unit α α where
   inputFinite := M.outputFinite
-  auxiliaryFinite := inferInstance
-  outputFinite := inferInstance
+  auxiliaryFinite := M.inputFinite
+  outputFinite := M.inputFinite
   states := M.states
   symbols := M.symbols
   initial := M.initial
@@ -36,7 +37,7 @@ def auxiliaryDecisionConfiguration (c : Configuration M) : Configuration (auxili
   visited := c.visited
   output := []
 
-def auxiliaryDecisionOutcome : Outcome Unit → Outcome Bool
+def auxiliaryDecisionOutcome : Outcome Unit → Outcome α
   | .accepted _ => .accepted []
   | .rejected => .rejected
   | .exhausted => .exhausted
@@ -45,20 +46,20 @@ def auxiliaryDecisionResult : RunState M → RunState (auxiliaryDecision M)
   | .running c => .running (auxiliaryDecisionConfiguration M c)
   | .halted result => .halted (auxiliaryDecisionOutcome result)
 
-theorem auxiliaryDecision_observe (n : ℕ) (word bits : BitString) (c : Configuration M) :
-    (auxiliaryDecision M).observe (generatorData n word) bits (auxiliaryDecisionConfiguration M c) =
+theorem auxiliaryDecision_observe (n : ℕ) (word : List α) (bits : BitString) (c : Configuration M) :
+    (auxiliaryDecision M).observe (certificateData n word) bits (auxiliaryDecisionConfiguration M c) =
       auxiliaryDecisionResult M (M.observe (decisionData word) bits c) := by
   simp only [Machine.observe, auxiliaryDecision, auxiliaryDecisionConfiguration,
-    generatorData, decisionData, List.getElem?_nil, Nat.not_lt_zero, ↓reduceIte]
+    certificateData, decisionData, List.getElem?_nil, Nat.not_lt_zero, ↓reduceIte]
   cases M.transition c.state word[c.inputHead]? none none (c.work c.workHead) <;>
     simp only [auxiliaryDecisionResult, auxiliaryDecisionOutcome, auxiliaryDecisionConfiguration]
   split_ifs <;> rfl
 
-theorem auxiliaryDecision_next (n : ℕ) (word bits : BitString) (c : Configuration M) :
-    (auxiliaryDecision M).next (generatorData n word) bits (auxiliaryDecisionConfiguration M c) =
+theorem auxiliaryDecision_next (n : ℕ) (word : List α) (bits : BitString) (c : Configuration M) :
+    (auxiliaryDecision M).next (certificateData n word) bits (auxiliaryDecisionConfiguration M c) =
       auxiliaryDecisionResult M (M.next (decisionData word) bits c) := by
   simp only [Machine.next, auxiliaryDecision, auxiliaryDecisionConfiguration,
-    generatorData, decisionData, List.getElem?_nil, Nat.not_lt_zero, ↓reduceIte]
+    certificateData, decisionData, List.getElem?_nil, Nat.not_lt_zero, ↓reduceIte]
   cases M.transition c.state word[c.inputHead]? none none (c.work c.workHead) with
   | accept => rfl
   | reject => rfl
@@ -66,21 +67,21 @@ theorem auxiliaryDecision_next (n : ℕ) (word bits : BitString) (c : Configurat
   | step state write work input auxiliary index emit =>
       cases write <;> cases emit <;> simp [auxiliaryDecisionResult, auxiliaryDecisionConfiguration, Move.onInput]
 
-theorem auxiliaryDecision_run (n : ℕ) (word bits : BitString) (t : ℕ) :
-    (auxiliaryDecision M).run (generatorData n word) bits t =
+theorem auxiliaryDecision_run (n : ℕ) (word : List α) (bits : BitString) (t : ℕ) :
+    (auxiliaryDecision M).run (certificateData n word) bits t =
       auxiliaryDecisionResult M (M.run (decisionData word) bits t) :=
   Machine.run_map (fun _ => rfl) (fun _ => rfl)
     (auxiliaryDecision_observe M n word bits) (auxiliaryDecision_next M n word bits) rfl t
 
-theorem auxiliaryDecision_timeBound (n : ℕ) (word : BitString) (t : ℕ)
+theorem auxiliaryDecision_timeBound (n : ℕ) (word : List α) (t : ℕ)
     (bound : M.TimeBound (decisionData word) t) :
-    (auxiliaryDecision M).TimeBound (generatorData n word) t := by
+    (auxiliaryDecision M).TimeBound (certificateData n word) t := by
   intro bits
   obtain ⟨result, halted⟩ := bound bits
   exact ⟨auxiliaryDecisionOutcome result, by rw [auxiliaryDecision_run, halted]; rfl⟩
 
-theorem auxiliaryDecision_accepts (n : ℕ) (word bits : BitString) :
-    (auxiliaryDecision M).Accepts (generatorData n word) bits ↔ M.Accepts (decisionData word) bits := by
+theorem auxiliaryDecision_accepts (n : ℕ) (word : List α) (bits : BitString) :
+    (auxiliaryDecision M).Accepts (certificateData n word) bits ↔ M.Accepts (decisionData word) bits := by
   constructor
   · rintro ⟨out, t, accepted⟩
     rw [auxiliaryDecision_run] at accepted

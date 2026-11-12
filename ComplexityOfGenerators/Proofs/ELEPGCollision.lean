@@ -54,25 +54,50 @@ theorem HashFunction.expected_collision_tail_impossible (h : HashFunction)
   exact fun n i index => expectedCollisionFinder_stream_success h G
     (expectedCollisionClock p) sound n i index
 
-/-- The bounded-exception form needed for nonclosure: adding the empty word
-does not restore expected-length expected-polynomial-time generability. -/
+/-- The current manuscript's stronger obstruction: infinitely many nonempty
+members and their two first moments suffice, without short paths or index bounds. -/
+theorem HashFunction.expected_collision_raw_impossible (h : HashFunction)
+    (secure : h.CollisionResistant) (G : UniformGenerators Bool)
+    (active : G.activeIndices.Infinite) (mean : G.ExpectedLength)
+    (expected : G.RawExpectedPolynomialTime)
+    (sound : ∀ i word, word ∈ G.layer i → word = [] ∨ word ∈ h.binaryCollisionLanguage) :
+    False := by
+  obtain ⟨p, runtime⟩ := expected
+  apply h.expected_collision_generator_contradiction_on_infinite secure G G.activeIndices
+    active p (fun i _ word member => (sound i word member).symm) mean runtime
+    (ExpectedCollisionSearch.finder G.machine (expectedCollisionClock p))
+  exact fun n i index => expectedCollisionFinder_stream_success h G
+    (expectedCollisionClock p) sound n i index
+
+/-- Bounded exceptional empty outputs do not restore the weaker raw expected-
+length, expected-polynomial-time generability. -/
+theorem HashFunction.not_mem_expectedLengthExpectedPolynomialTime_of_subset_collisionWithEmpty
+    (h : HashFunction) (secure : h.CollisionResistant) {L : Language Bool}
+    (subset : L ⊆ h.collisionWithEmpty) :
+    L ∉ ExpectedLengthExpectedPolynomialTime Bool := by
+  rintro ⟨_, G, language, active, mean, expected⟩
+  apply h.expected_collision_raw_impossible secure G active mean expected
+  intro i word member
+  have inLanguage : word ∈ L := language ▸ (show word ∈ G.language from ⟨i, member⟩)
+  rcases subset inLanguage with collision | empty
+  · exact Or.inr collision
+  · exact Or.inl empty
+
+/-- The paper's collision exclusion holds already for the weaker raw notion. -/
+theorem HashFunction.binaryCollisionLanguage_not_mem_expectedLengthExpectedPolynomialTime
+    (h : HashFunction) (secure : h.CollisionResistant) :
+    h.binaryCollisionLanguage ∉ ExpectedLengthExpectedPolynomialTime Bool :=
+  h.not_mem_expectedLengthExpectedPolynomialTime_of_subset_collisionWithEmpty secure
+    (fun _ member => Or.inl member)
+
+/-- The bounded-exception form needed for nonclosure now uses the current
+ELEPG definition, and follows from the stronger raw obstruction. -/
 theorem HashFunction.not_mem_elepg_of_subset_collisionWithEmpty (h : HashFunction)
     (secure : h.CollisionResistant) {L : Language Bool}
     (subset : L ⊆ h.collisionWithEmpty) : L ∉ ELEPG Bool := by
-  rintro ⟨_, G, language, mean, p, runtime, _⟩
-  have sound (i : ℕ) (word : BitString) (member : word ∈ G.layer i) :
-      word = [] ∨ word ∈ h.binaryCollisionLanguage := by
-    have inLanguage : word ∈ L := language ▸ (show word ∈ G.language from ⟨i, member⟩)
-    rcases subset inLanguage with collision | empty
-    · exact Or.inr collision
-    · exact Or.inl empty
-  apply h.expected_collision_tail_impossible secure G 1 p sound
-    (fun i _ => mean i)
-  intro i positive
-  apply runtime i
-  apply G.machine.generatedLanguage_nonempty_of_expectedLength_pos
-  rw [mean i]
-  exact_mod_cast (show 0 < i by omega)
+  intro member
+  exact h.not_mem_expectedLengthExpectedPolynomialTime_of_subset_collisionWithEmpty
+    secure subset (elepg_subset_expectedLengthExpectedPolynomialTime member)
 
 theorem HashFunction.binaryCollisionLanguage_not_mem_elepg (h : HashFunction)
     (secure : h.CollisionResistant) : h.binaryCollisionLanguage ∉ ELEPG Bool :=

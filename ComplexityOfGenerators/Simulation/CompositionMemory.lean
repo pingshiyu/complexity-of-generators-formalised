@@ -5,28 +5,28 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 abbrev CompositionConfiguration :=
   TransducerBank.BankConfiguration α (CompositionState S R) (CompositionSymbol S R) 4
 
-def compositionCertificate (word : BitString) (i : ℤ) : CompositionSymbol S R :=
+def compositionCertificate (word : List β) (i : ℤ) : CompositionSymbol S R :=
   {certificate := if 0 ≤ i then word[i.toNat]? else none}
 
 def compositionIndex (n : ℕ) (i : ℤ) : CompositionSymbol S R :=
   {index := decide (0 ≤ i ∧ i < (n : ℤ))}
 
-@[simp] theorem compositionCertificate_nat (word : BitString) (i : ℕ) :
+@[simp] theorem compositionCertificate_nat (word : List β) (i : ℕ) :
     compositionCertificate S R word i = {certificate := word[i]?} := by simp [compositionCertificate]
 
 @[simp] theorem compositionCertificate_nil : compositionCertificate S R [] = fun _ => {} := by
   funext i
   simp [compositionCertificate]
 
-@[simp] theorem compositionCertificate_end (word : BitString) :
+@[simp] theorem compositionCertificate_end (word : List β) :
     compositionCertificate S R word word.length = {} := by simp
 
-theorem compositionCertificate_append (word : BitString) (bit : Bool) :
+theorem compositionCertificate_append (word : List β) (bit : β) :
     Function.update (compositionCertificate S R word) (word.length : ℤ) {certificate := some bit} =
       compositionCertificate S R (word ++ [bit]) := by
   funext i
@@ -68,7 +68,7 @@ def samplerBankConfiguration (n : ℕ) (source : Configuration S) : CompositionC
   tape := fun j i => if j = 0 then {sampler := source.work i} else if j = 1 then compositionIndex S R n i
     else if j = 2 then compositionCertificate S R source.output i else {}
 
-def recovererBankConfiguration (n : ℕ) (certificate : BitString) (samplerWork : ℤ → Option (Fin S.symbols))
+def recovererBankConfiguration (n : ℕ) (certificate : List β) (samplerWork : ℤ → Option (Fin S.symbols))
     (samplerHead : ℤ) (source : Configuration R) : CompositionConfiguration S R where
   state := .recover source.state
   inputHead := 0

@@ -1,10 +1,17 @@
-import ComplexityOfGenerators.Foundations.ModelBridge
+import ComplexityOfGenerators.Foundations.BasicTheorems
 import ComplexityOfGenerators.Foundations.ResourceBounds
 import ComplexityOfGenerators.Foundations.Computability
 import ComplexityOfGenerators.Foundations.Cryptography
 import ComplexityOfGenerators.Foundations.Probability
+import ComplexityOfGenerators.Foundations.FixedBlockPrefix
+import ComplexityOfGenerators.Foundations.FreshStreamSamplers
+import ComplexityOfGenerators.Foundations.SequentialCostMoments
+import ComplexityOfGenerators.Foundations.CertificationErrors
+import ComplexityOfGenerators.Foundations.CertificationSequence
+import ComplexityOfGenerators.Proofs.ExpectedSourceSampler
+import ComplexityOfGenerators.Simulation.FixedBlockRetry.LoopSuccess
 import ComplexityOfGenerators.Simulation
 import ComplexityOfGenerators.Proofs
 
 /-! Import this module to use the supporting development without importing the
-five main theorem statements assembled in `MainTheorems`. -/
+public theorem statements assembled in `MainTheorems`. -/

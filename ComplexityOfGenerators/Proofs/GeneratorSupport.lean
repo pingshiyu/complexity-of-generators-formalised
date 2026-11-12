@@ -29,6 +29,15 @@ namespace Machine
 
 variable {I A O : Type} (M : Machine I A O) (data : InputData I A)
 
+/-- Allow the empty accepting seed by extending it once when defining support. -/
+theorem mem_generatedLanguage_iff_produces (word : List O) :
+    word ∈ M.generatedLanguage data ↔ ∃ bits, M.Produces data bits word := by
+  constructor
+  · rintro ⟨bits, _, produced⟩
+    exact ⟨bits, produced⟩
+  · rintro ⟨bits, produced⟩
+    exact ⟨bits ++ [false], by simp, M.produces_append data bits [false] word produced⟩
+
 theorem generatedLanguage_nonempty_iff_accepts :
     (M.generatedLanguage data).Nonempty ↔ ∃ bits, M.Accepts data bits := by
   constructor

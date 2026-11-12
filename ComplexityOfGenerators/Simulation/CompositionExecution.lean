@@ -36,11 +36,11 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 /-- Start from blank tapes, load the parameter, and reach the first terminal
 sampler observation. The returned random cursor is within the supplied tape. -/
-theorem composition_sampler_prefix (n : ℕ) (bits : BitString) (t : ℕ) (result : Outcome Bool)
+theorem composition_sampler_prefix (n : ℕ) (bits : BitString) (t : ℕ) (result : Outcome β)
     (source : S.run (generatorData n) bits t = .halted result) :
     ∃ terminal ticks, ticks ≤ 2 * n + 4 * t + 3 ∧
       (samplerCompositionBank S R).Steps (generatorData n) bits (samplerCompositionBank S R).initialConfiguration ticks
@@ -59,7 +59,7 @@ theorem composition_sampler_prefix (n : ℕ) (bits : BitString) (t : ℕ) (resul
 /-- Explicit sampler rejection is implemented by consuming the remaining
 random tape, including when that tape is already exhausted. -/
 theorem composition_sampler_failure (n : ℕ) (bits : BitString) (c : Configuration S)
-    (result : Outcome Bool) (terminal : S.observe (generatorData n) bits c = .halted result)
+    (result : Outcome β) (terminal : S.observe (generatorData n) bits c = .halted result)
     (failed : ∀ certificate, result ≠ .accepted certificate) :
     ∃ ticks, ticks ≤ bits.length + 1 ∧ (samplerCompositionBank S R).Executes (generatorData n) bits
       {samplerBankConfiguration S R n c with state := .sampleWork c.state (decide (c.indexHead < n))} ticks .exhausted := by

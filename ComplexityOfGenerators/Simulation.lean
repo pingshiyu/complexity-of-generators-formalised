@@ -1,3 +1,10 @@
+import ComplexityOfGenerators.Simulation.ExpectedStarCalls
+import ComplexityOfGenerators.Simulation.CertifiedStarPhase
+import ComplexityOfGenerators.Simulation.StarCertification
+import ComplexityOfGenerators.Simulation.StarPaths
+import ComplexityOfGenerators.Simulation.WordStack.GrowingRoutine
+import ComplexityOfGenerators.Simulation.WordStack.InputBank.Capped
+import ComplexityOfGenerators.Simulation.WordStack.OneHot
 import ComplexityOfGenerators.Simulation.RecursivePrograms
 import ComplexityOfGenerators.Simulation.ComputableEvaluator
 import ComplexityOfGenerators.Simulation.WordInput
@@ -26,6 +33,11 @@ import ComplexityOfGenerators.Simulation.WordStack.Compiler
 import ComplexityOfGenerators.Simulation.ExactRecursive.Execution
 import ComplexityOfGenerators.Simulation.ExactRecursive.TableBridge
 import ComplexityOfGenerators.Simulation.ExpectedCollisionSearchExecution
+
+import ComplexityOfGenerators.Simulation.NativeSourceCall.Execution
+import ComplexityOfGenerators.Simulation.NativeSourceCall.ParameterInitialisation
+import ComplexityOfGenerators.Simulation.NativeChoice.Properties
+import ComplexityOfGenerators.Simulation.WordStack.OutputPrefix
 
 /-! Verified finite-control simulations, including input loading, finite-support
 restriction, and composition with Mathlib's recursive-program compiler. -/

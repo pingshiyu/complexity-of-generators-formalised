@@ -1,0 +1,97 @@
+import ComplexityOfGenerators
+
+/-! Smoke checks for the current public statements, including both general
+resource characterisations and all native positive closure clauses. -/
+
+open ComplexityOfGenerators
+
+#check proposition_4_2_polynomial_up_to
+#check proposition_4_2_polynomial_binary_up_to
+#check proposition_6_3_pg_union
+#check proposition_6_3_pg_concatenation
+#check proposition_5_2_expected_polynomial_generation
+#check theorem_5_1_expected_generation_containments
+#check theorem_5_2_raw_expected_length_collision_non_generability
+#check corollary_5_2_collision_non_generability
+#check theorem_6_1_complement_nonclosure
+#check theorem_6_1_infinite_intersection_nonclosure
+#check mem_pg_iff_accepting_polynomial_time
+#check Machine.accepts_full_prefix_of_acceptingTimeBound
+#check pgUpTo_subset_np
+#check pspacegUpTo_subset_pspace
+
+#print axioms proposition_5_2_expected_polynomial_generation
+#print axioms theorem_5_1_expected_generation_containments
+#print axioms theorem_5_2_raw_expected_length_collision_non_generability
+#print axioms theorem_6_1_complement_nonclosure
+#print axioms theorem_6_1_infinite_intersection_nonclosure
+
+#print axioms pg_union
+#print axioms pgUpTo_eq_np_bool
+
+#print axioms pg_concatenation
+#print axioms pgUpTo_eq_np
+
+#check ComplexityOfGenerators.mem_pg_iff_exists_gtime_polynomial
+#check ComplexityOfGenerators.proposition_4_1_polynomial
+#check ComplexityOfGenerators.proposition_4_2_polynomial_space_up_to
+#check ComplexityOfGenerators.proposition_6_3_pg_star
+#print axioms ComplexityOfGenerators.proposition_6_3_pg_star
+
+#check proposition_6_3_epg_union
+#check layerFastELEPG_union
+#check proposition_6_3_epg_concatenation
+#check layerFastELEPG_concatenation
+#print axioms proposition_6_3_epg_union
+#print axioms layerFastELEPG_union
+#print axioms proposition_6_3_epg_concatenation
+#print axioms layerFastELEPG_concatenation
+
+#check Examples.PaddedCNF.NativeEvaluation.NativeVerifier.machine_correct
+#check Examples.PaddedCNF.BaseSampler.baseFamily_language
+#check Examples.PaddedCNF.BaseSampler.baseFamily_polynomialTime
+#check Examples.HAMPATH.Native.width_computable
+#check Examples.HAMPATH.Native.rank_computable
+#print axioms Examples.PaddedCNF.NativeEvaluation.NativeVerifier.machine_correct
+#print axioms Examples.PaddedCNF.BaseSampler.baseFamily_polynomialTime
+#print axioms Examples.HAMPATH.Native.rank_computable
+
+#check Examples.PaddedCNF.polynomialSelfReduction
+#check Examples.PaddedCNF.exactlyRecursivelyGenerable
+#check Examples.PaddedCNF.language_mem_pg
+#print axioms Examples.PaddedCNF.exactlyRecursivelyGenerable
+#print axioms Examples.PaddedCNF.language_mem_pg
+
+#check Examples.HAMPATH.polynomialSelfReduction
+#print axioms Examples.HAMPATH.polynomialSelfReduction
+
+#check Examples.HAMPATH.exactlyRecursivelyGenerable
+#check Examples.HAMPATH.language_mem_pg
+#print axioms Examples.HAMPATH.exactlyRecursivelyGenerable
+#print axioms Examples.HAMPATH.language_mem_pg
+
+#check proposition_6_3_epg_star
+#check proposition_6_3_elepg_star
+#print axioms proposition_6_3_elepg_star
+#check layerFastELEPG_star
+#print axioms proposition_6_3_epg_star
+#print axioms layerFastELEPG_star
+
+#check proposition_4_1_time
+#check proposition_4_2_time_forward
+#print axioms proposition_4_1_time
+#print axioms proposition_4_2_time_forward
+
+#check proposition_4_1_space
+#check proposition_4_2_time
+#check proposition_4_2_space
+#print axioms proposition_4_1_space
+#print axioms proposition_4_2_time
+#print axioms proposition_4_2_space
+#check UniformGenerators.GlobalWordPolynomialTime.bounded_paths
+#print axioms elepg_subset_np
+
+#check proposition_6_3_elepg_union
+#check proposition_6_3_elepg_concatenation
+#print axioms proposition_6_3_elepg_union
+#print axioms proposition_6_3_elepg_concatenation

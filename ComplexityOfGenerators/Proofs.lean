@@ -1,3 +1,6 @@
+import ComplexityOfGenerators.Proofs.StarCertificationProbability
+import ComplexityOfGenerators.Proofs.ExpectedStarMoments
+import ComplexityOfGenerators.Proofs.ResourcePreservingMatcher
 import ComplexityOfGenerators.Proofs.GeneratorCriteria
 import ComplexityOfGenerators.Proofs.ElementaryGenerators
 import ComplexityOfGenerators.Proofs.RecognitionSearch
@@ -35,10 +38,32 @@ import ComplexityOfGenerators.Proofs.ExactRecursiveStopping
 import ComplexityOfGenerators.Proofs.WordStackGenerators
 import ComplexityOfGenerators.Proofs.ExactRecursiveGeneration
 import ComplexityOfGenerators.Proofs.ELEPGCollision
-
-/-! Completed components of the main proofs and Appendix A.23. This module
-contains no unfinished proofs; `MainTheorems` assembles the five completed
-theorem statements and Proposition A.23.2. Exact recursive generation uses a
+import ComplexityOfGenerators.Proofs.ExpectedGenerationContainment
+import ComplexityOfGenerators.Proofs.ExpectedLengthContainment
+import ComplexityOfGenerators.Proofs.ExpectedNonclosure
+import ComplexityOfGenerators.Foundations.ExpectedClosureBounds
+import ComplexityOfGenerators.Proofs.UpToGeneration
+import ComplexityOfGenerators.Proofs.AcceptingTimeGeneration
+import ComplexityOfGenerators.Proofs.UpToPolynomialGeneration
+import ComplexityOfGenerators.Proofs.UpToSpaceGeneration
+import ComplexityOfGenerators.Proofs.PolynomialUnion
+import ComplexityOfGenerators.Proofs.PolynomialConcatenation
+import ComplexityOfGenerators.Proofs.PolynomialStar
+import ComplexityOfGenerators.Proofs.ExpectedUnion
+import ComplexityOfGenerators.Proofs.ExpectedConcatenation
+import ComplexityOfGenerators.Proofs.ExpectedStar
+import ComplexityOfGenerators.Proofs.Multitape.TimeContainment
+import ComplexityOfGenerators.Proofs.Multitape.TimeConverse
+import ComplexityOfGenerators.Proofs.Multitape.SpaceContainment
+import ComplexityOfGenerators.Foundations.IndexedSupportClosure
+import ComplexityOfGenerators.Examples
+import ComplexityOfGenerators.Proofs.OriginalSourceClosureSupport
+import ComplexityOfGenerators.Proofs.ExpectedOriginalStarSampling
+import ComplexityOfGenerators.Proofs.ELEPGStar
+import ComplexityOfGenerators.Proofs.ELEPGBinary
+/-! Checked proof components, including the current expected-time results.
+`MainTheorems` assembles the public statements; `CURRENT_PAPER_STATUS.md` records
+which current paper claims remain unformalised. Exact recursive generation uses a
 verified finite stack program, polynomial instruction bounds, and the proved
 stack-to-native compiler. The expected-length extension proves ELEPG collision
 non-generability and infinite-intersection nonclosure using a native bounded

@@ -5,7 +5,7 @@ import ComplexityOfGenerators.Simulation.TransducerBank.Execution
 
 Four work tapes hold sampler work, the unary index, the sampled certificate,
 and recoverer work. The stored index uses Boolean occupancy flags, decoded to
-`Option Unit` when calling either source machine; certificates remain binary.
+`Option Unit` when calling either source machine; the certificate alphabet is shared by the sampler and recoverer.
 Index and certificate heads are rewound by scanning their
 origin markers before recovery. Sampler output is written one bit at a time;
 recoverer output is emitted one symbol at a time. The physical random cursor
@@ -14,35 +14,39 @@ is shared. Explicit sampler failure enters a random-tape drain.
 
 namespace ComplexityOfGenerators.Simulation
 
-@[ext] structure CompositionCell (samplerSymbols recovererSymbols : ℕ) where
+@[ext] structure CompositionCell (samplerSymbols recovererSymbols : ℕ) (β : Type := Bool) where
   sampler : Option (Fin samplerSymbols) := none
   recoverer : Option (Fin recovererSymbols) := none
-  certificate : Option Bool := none
+  certificate : Option β := none
   index : Bool := false
   deriving DecidableEq, Fintype
 
 noncomputable section
 local instance compositionMoveFintype : Fintype Move := Fintype.ofFinite _
 
-inductive CompositionPhase (samplerStates recovererStates : ℕ)
+inductive CompositionPhase (samplerStates recovererStates : ℕ) (β : Type := Bool)
   | load | rewindLoad
   | sample (q : Fin samplerStates)
   | sampleWork (q : Fin samplerStates) (index : Bool)
-  | sampleIndex (q : Fin samplerStates) (index : Move) (emit : Option Bool)
-  | sampleEmit (q : Fin samplerStates) (emit : Option Bool)
+  | sampleIndex (q : Fin samplerStates) (index : Move) (emit : Option β)
+  | sampleEmit (q : Fin samplerStates) (emit : Option β)
   | resetIndex | resetCertificate
   | recover (q : Fin recovererStates)
   | recoverAux (q : Fin recovererStates) (index : Bool)
-  | recoverWork (q : Fin recovererStates) (index : Bool) (certificate : Option Bool)
+  | recoverWork (q : Fin recovererStates) (index : Bool) (certificate : Option β)
   | recoverIndex (q : Fin recovererStates) (index auxiliary : Move)
   | recoverAuxMove (q : Fin recovererStates) (auxiliary : Move)
   | drain
   deriving Fintype
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+/-- A family index together with a certificate over any finite alphabet. -/
+def certificateData {β : Type} (n : ℕ) (certificate : List β) : InputData Unit β :=
+  {index := n, auxiliary := certificate}
 
-abbrev CompositionState := CompositionPhase S.states R.states
-abbrev CompositionSymbol := CompositionCell S.symbols R.symbols
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
+
+abbrev CompositionState := CompositionPhase S.states R.states β
+abbrev CompositionSymbol := CompositionCell S.symbols R.symbols β
 
 def compositionSelect : CompositionState S R → Fin 4
   | .load | .rewindLoad | .sample _ | .sampleIndex _ _ _ | .resetIndex | .recover _ | .recoverIndex _ _ _ => 1

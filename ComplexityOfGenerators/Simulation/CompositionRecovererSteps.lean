@@ -6,11 +6,11 @@ noncomputable section
 set_option backward.isDefEq.respectTransparency false
 set_option maxRecDepth 4096
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 /-- Read the virtual index and certificate cells before the recoverer's work
 instruction; the sampled certificate is never copied into finite control. -/
-theorem composition_recoverer_fetch (n : ℕ) (certificate bits : BitString)
+theorem composition_recoverer_fetch (n : ℕ) (certificate : List β) (bits : BitString)
     (samplerWork : ℤ → Option (Fin S.symbols)) (samplerHead : ℤ) (c : Configuration R) :
     (samplerCompositionBank S R).Steps (generatorData n) bits
       (recovererBankConfiguration S R n certificate samplerWork samplerHead c) 2
@@ -22,16 +22,16 @@ theorem composition_recoverer_fetch (n : ℕ) (certificate bits : BitString)
   have first : B.Steps (generatorData n) bits start 1 middle := by
     apply TransducerBank.TapeBank.Steps.go <;>
       simp [B, start, TransducerBank.TapeBank.instruction, samplerCompositionBank, recovererBankConfiguration,
-        compositionSelect, compositionTransition, compositionIndex, generatorData]
+        compositionSelect, compositionTransition, compositionIndex, generatorData, certificateData]
   have second : B.Steps (generatorData n) bits middle 1
       {start with state := .recoverWork c.state (decide (c.indexHead < n)) certificate[c.auxiliaryHead]?} := by
     apply TransducerBank.TapeBank.Steps.go <;>
       simp [B, middle, start, TransducerBank.TapeBank.instruction, samplerCompositionBank, recovererBankConfiguration,
-        compositionSelect, compositionTransition, generatorData]
+        compositionSelect, compositionTransition, generatorData, certificateData]
   exact first.trans B second
 
 /-- Update the three independent simulated tapes and emit at most one letter. -/
-theorem composition_recoverer_step (n : ℕ) (certificate bits : BitString)
+theorem composition_recoverer_step (n : ℕ) (certificate : List β) (bits : BitString)
     (samplerWork : ℤ → Option (Fin S.symbols)) (samplerHead : ℤ) (c : Configuration R)
     (indexBound : c.indexHead ≤ n) (auxiliaryBound : c.auxiliaryHead ≤ certificate.length)
     (next : Fin R.states) (write : Option (Fin R.symbols)) (work input auxiliary index : Move) (emit : Option α)
@@ -42,7 +42,7 @@ theorem composition_recoverer_step (n : ℕ) (certificate bits : BitString)
       {recovererBankConfiguration S R n certificate samplerWork samplerHead c with
         state := .recoverWork c.state (decide (c.indexHead < n)) certificate[c.auxiliaryHead]?} 3
       (recovererBankConfiguration S R n certificate samplerWork samplerHead
-        (R.stepConfiguration (generatorData n certificate) c next write work input auxiliary index emit)) := by
+        (R.stepConfiguration (certificateData n certificate) c next write work input auxiliary index emit)) := by
   let B := samplerCompositionBank S R
   let c₀ : CompositionConfiguration S R :=
     {recovererBankConfiguration S R n certificate samplerWork samplerHead c with
@@ -76,18 +76,18 @@ theorem composition_recoverer_step (n : ℕ) (certificate bits : BitString)
     simp [B, c₂, c₁, c₀, TransducerBank.TapeBank.instruction, TransducerBank.TapeBank.advance,
       samplerCompositionBank, recovererBankConfiguration, compositionSelect, compositionTransition, auxiliaryMove, live]
   have equal : c₃ = recovererBankConfiguration S R n certificate samplerWork samplerHead
-      (R.stepConfiguration (generatorData n certificate) c next write work input auxiliary index emit) := by
+      (R.stepConfiguration (certificateData n certificate) c next write work input auxiliary index emit) := by
     apply TransducerBank.BankConfiguration.ext
     · rfl
-    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData]
-    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData]
-    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData]
+    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData, certificateData]
+    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData, certificateData]
+    · simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Move.onInput, generatorData, certificateData]
     · rfl
     · cases emit <;> simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, recovererBankConfiguration, Machine.stepConfiguration]
     · funext j
       fin_cases j <;>
         simp [c₃, c₂, c₁, c₀, TransducerBank.TapeBank.advance, B, samplerCompositionBank, compositionSelect,
-          recovererBankConfiguration, Machine.stepConfiguration, generatorData, Move.onInt]
+          recovererBankConfiguration, Machine.stepConfiguration, generatorData, certificateData, Move.onInt]
       all_goals first | exact indexMoved | exact auxiliaryMoved
     · funext j i
       fin_cases j <;> cases write <;>
@@ -97,7 +97,7 @@ theorem composition_recoverer_step (n : ℕ) (certificate bits : BitString)
   rw [← equal]
   exact (first.trans B second).trans B third
 
-theorem composition_recoverer_random (n : ℕ) (certificate bits : BitString)
+theorem composition_recoverer_random (n : ℕ) (certificate : List β) (bits : BitString)
     (samplerWork : ℤ → Option (Fin S.symbols)) (samplerHead : ℤ) (c : Configuration R)
     (no yes : Fin R.states) (bit : Bool)
     (action : R.transition c.state none certificate[c.auxiliaryHead]?

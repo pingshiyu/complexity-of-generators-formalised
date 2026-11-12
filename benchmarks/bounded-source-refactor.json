@@ -1,0 +1,20 @@
+{
+  "rounds": 3,
+  "scope": "fresh elaboration of three leaves, shared cached dependencies",
+  "median_seconds": {
+    "before": {
+      "ComplexityOfGenerators/Simulation/ExactRecursive/Trial.lean": 10.983,
+      "ComplexityOfGenerators/Simulation/ExactRecursive/TrialBounds.lean": 4.77,
+      "ComplexityOfGenerators/Simulation/ExactRecursive/Prepare.lean": 10.262
+    },
+    "after": {
+      "ComplexityOfGenerators/Simulation/ExactRecursive/Trial.lean": 2.774,
+      "ComplexityOfGenerators/Simulation/ExactRecursive/TrialBounds.lean": 3.017,
+      "ComplexityOfGenerators/Simulation/ExactRecursive/Prepare.lean": 2.759
+    }
+  },
+  "source_lines": {
+    "before": 305,
+    "after": 152
+  }
+}

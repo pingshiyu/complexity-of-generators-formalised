@@ -5,10 +5,10 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 theorem composition_sampler_runFrom (n : ℕ) (bits : BitString) (c : Configuration S)
-    (t : ℕ) (result : Outcome Bool) (source : S.runFrom (generatorData n) bits c t = .halted result)
+    (t : ℕ) (result : Outcome β) (source : S.runFrom (generatorData n) bits c t = .halted result)
     (indexBound : c.indexHead ≤ n) :
     ∃ terminal ticks, ticks ≤ 4 * t + 1 ∧
       (samplerCompositionBank S R).Steps (generatorData n) bits (samplerBankConfiguration S R n c) ticks

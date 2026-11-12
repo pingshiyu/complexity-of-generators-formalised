@@ -76,11 +76,7 @@ theorem generatedWord_iff_boundedDecisionPath (word : List α) (s : ℕ)
   have bounded : (outputMatcher M).SpaceBound data s := outputMatcher_spaceBound M data s space
   rw [← bounded.accepts_iff_boundedDecisionPath (outputMatcher M)]
   simp only [outputMatcher_accepts_iff]
-  constructor
-  · rintro ⟨bits, _, produced⟩
-    exact ⟨bits, produced⟩
-  · rintro ⟨bits, produced⟩
-    exact ⟨bits ++ [false], by simp, M.produces_append _ bits [false] word produced⟩
+  exact M.mem_generatedLanguage_iff_produces _ _
 
 end
 end ComplexityOfGenerators.Simulation

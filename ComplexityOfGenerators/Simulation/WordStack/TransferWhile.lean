@@ -1,41 +1,37 @@
 import ComplexityOfGenerators.Simulation.WordStack.Routines
 
-namespace ComplexityOfGenerators.Simulation.WordStack.Command
+/-! Transfer the longest stored prefix satisfying a decidable symbol test.
+The first failing symbol remains available to the next bounded operation. -/
+namespace ComplexityOfGenerators.Simulation.WordStack
+
+namespace Command
 
 variable {S O : Type} {k : ℕ}
 
-def transferWhile (src dst : Fin k) (test : S → Bool) (f : S → S) : Command S O k :=
-  .loop src (fun o => o.1.any test) (.branch src fun o => match o.1 with
+def transferWhile (src dst : Fin k) (keep : S → Bool) (f : S → S) : Command S O k :=
+  .loop src (fun o => o.1.any keep) (.branch src fun o => match o.1 with
     | none => .skip
     | some a => (pop src).seq (push dst (f a)))
 
-theorem transferWhile_runs (src dst : Fin k) (different : src ≠ dst) (test : S → Bool) (f : S → S)
+def transferredWhile (src dst : Fin k) (keep : S → Bool) (f : S → S) (m : Memory S O k) : Memory S O k :=
+  (m.set src ((m.store src).dropWhile keep)).set dst (((m.store src).takeWhile keep).reverse.map f ++ m.store dst)
+
+theorem transferWhile_runs (src dst : Fin k) (different : src ≠ dst) (keep : S → Bool) (f : S → S)
     {n : ℕ} (bits : BitString) (m : Memory S O k) (bounded : m.indexHead ≤ n) :
-    (transferWhile src dst test f).Runs n bits m (6 * ((m.store src).takeWhile test).length)
-      (.done ((m.set src ((m.store src).dropWhile test)).set dst
-        (((m.store src).takeWhile test).reverse.map f ++ m.store dst))) := by
+    (transferWhile src dst keep f).Runs n bits m (6 * ((m.store src).takeWhile keep).length)
+      (.done (transferredWhile src dst keep f m)) := by
   generalize word_eq : m.store src = word
   induction word generalizing m with
   | nil =>
-    have final : (m.set src (([] : List S).dropWhile test)).set dst
-        ((([] : List S).takeWhile test).reverse.map f ++ m.store dst) = m := by
-      simp only [List.dropWhile_nil, List.takeWhile_nil, List.reverse_nil, List.map_nil, List.nil_append]
+    have same : transferredWhile src dst keep f m = m := by
+      simp only [transferredWhile, word_eq, List.dropWhile_nil, List.takeWhile_nil,
+        List.reverse_nil, List.map_nil, List.nil_append]
       rw [← word_eq, Memory.set_self, Memory.set_self]
-    rw [final]
+    rw [same]
     exact Runs.loop_stop m src _ _ (by simp [observe, word_eq])
   | cons a word ih =>
-    cases check : test a with
-    | false =>
-      have final : (m.set src ((a :: word).dropWhile test)).set dst
-          (((a :: word).takeWhile test).reverse.map f ++ m.store dst) = m := by
-        simp only [List.dropWhile_cons, check, Bool.false_eq_true, ite_false,
-          List.takeWhile_cons, List.reverse_nil, List.map_nil, List.nil_append]
-        rw [← word_eq, Memory.set_self, Memory.set_self]
-      rw [final]
-      simpa [transferWhile, List.takeWhile_cons, check] using
-        Runs.loop_stop m src (fun o => o.1.any test) _ (by simp [observe, word_eq, check])
-    | true =>
-      let middle := (m.set src word).set dst (f a :: m.store dst)
+    by_cases kept : keep a = true
+    · let middle := (m.set src word).set dst (f a :: m.store dst)
       have popStep := pop_runs src bits m bounded
       simp only [word_eq, List.tail_cons] at popStep
       have pushStep := push_runs dst (f a) bits (m.set src word) bounded
@@ -44,35 +40,42 @@ theorem transferWhile_runs (src dst : Fin k) (different : src ≠ dst) (test : S
           | none => Command.skip
           | some a => (pop src).seq (push dst (f a))).Runs n bits m 4 (.done middle) := by
         apply Runs.branch m src _ 3 (.done middle)
-        simpa only [observe, word_eq, List.head?_cons] using Runs.seq _ _ _ _ _ _ _ popStep pushStep
+        simpa only [observe, word_eq, List.head?_cons] using
+          Runs.seq m (m.set src word) (pop src) (push dst (f a)) 1 1 (.done middle) popStep pushStep
       have rest := ih middle (by simpa [middle] using bounded) (by simp [middle, different])
-      have final : (middle.set src (word.dropWhile test)).set dst
-          ((word.takeWhile test).reverse.map f ++ middle.store dst) =
-          (m.set src ((a :: word).dropWhile test)).set dst
-            (((a :: word).takeWhile test).reverse.map f ++ m.store dst) := by
+      have final : transferredWhile src dst keep f middle = transferredWhile src dst keep f m := by
         apply Configuration.ext <;> try rfl
         funext j
         by_cases hs : j = src <;> by_cases hd : j = dst <;>
-          simp_all [middle, Memory.set, Function.update_apply, List.takeWhile_cons,
-            List.dropWhile_cons, List.reverse_cons, List.map_append, List.append_assoc]
+          simp_all [transferredWhile, middle, Memory.set, Function.update_apply,
+            List.reverse_cons, List.map_append, List.append_assoc]
       rw [final] at rest
-      have run := Runs.loop m middle src (fun o => o.1.any test) _ 4
-        (6 * (word.takeWhile test).length) _ (by simp [observe, word_eq, check]) body rest
-      convert run using 1
-      · rfl
-      · simp [List.takeWhile_cons, check]; omega
+      have run := Runs.loop m middle src (fun o => o.1.any keep) _ 4
+        (6 * (word.takeWhile keep).length) _ (by simp [observe, word_eq, kept]) body rest
+      convert run using 1 <;>
+        simp [transferWhile, word_eq, kept, middle, different]
+      omega
+    · have same : transferredWhile src dst keep f m = m := by
+        simp only [transferredWhile, word_eq]
+        simp only [List.dropWhile_cons, List.takeWhile_cons, kept, Bool.false_eq_true, ↓reduceIte,
+          List.reverse_nil, List.map_nil, List.nil_append]
+        rw [← word_eq, Memory.set_self, Memory.set_self]
+      rw [same]
+      simpa [transferWhile, word_eq, kept] using
+        (Runs.loop_stop m src (fun o => o.1.any keep) _ (by simp [observe, word_eq, kept]))
 
-end ComplexityOfGenerators.Simulation.WordStack.Command
+end Command
 
-namespace ComplexityOfGenerators.Simulation.WordStack.Routine
+namespace Routine
 
 variable {S O : Type} {k : ℕ}
 
-def transferWhile (src dst : Fin k) (different : src ≠ dst) (test : S → Bool) (f : S → S) : Routine S O k where
-  command := Command.transferWhile src dst test f
-  eval := fun s => Function.update (Function.update s src ((s src).dropWhile test)) dst
-    (((s src).takeWhile test).reverse.map f ++ s dst)
-  cost := fun s => 6 * ((s src).takeWhile test).length
-  runs bits m bounded := ⟨_, le_rfl, Command.transferWhile_runs src dst different test f bits m bounded⟩
+def transferWhile (src dst : Fin k) (different : src ≠ dst) (keep : S → Bool) (f : S → S) : Routine S O k where
+  command := Command.transferWhile src dst keep f
+  eval := fun s => Function.update (Function.update s src ((s src).dropWhile keep)) dst
+    (((s src).takeWhile keep).reverse.map f ++ s dst)
+  cost := fun s => 6 * ((s src).takeWhile keep).length
+  runs bits m bounded := ⟨_, le_rfl, Command.transferWhile_runs src dst different keep f bits m bounded⟩
 
-end ComplexityOfGenerators.Simulation.WordStack.Routine
+end Routine
+end ComplexityOfGenerators.Simulation.WordStack

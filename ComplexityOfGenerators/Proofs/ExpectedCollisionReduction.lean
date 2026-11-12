@@ -117,9 +117,8 @@ private theorem streamProduces_mem_layer (G : UniformGenerators Bool) (i : ℕ)
   exact ⟨bits ++ [false], by simp, G.machine.produces_append (generatorData i) bits [false] word produces⟩
 
 private theorem collision_atom_has_parameter (h : HashFunction) (G : UniformGenerators Bool)
-    (firstIndex i m : ℕ) (first : firstIndex ≤ i) (positive : 0 < m)
-    (sound : ∀ j, firstIndex ≤ j → ∀ word ∈ G.layer j,
-      word ∈ h.binaryCollisionLanguage ∨ word = [])
+    (i m : ℕ) (positive : 0 < m)
+    (sound : ∀ word ∈ G.layer i, word ∈ h.binaryCollisionLanguage ∨ word = [])
     (mass : 0 < fairCoinMeasure {stream |
       G.machine.streamLength (generatorData i) stream = m}) :
     ∃ n, m = expectedCollisionLength n := by
@@ -131,7 +130,7 @@ private theorem collision_atom_has_parameter (h : HashFunction) (G : UniformGene
   rcases G.machine.streamLength_spec (generatorData i) stream with produced | ⟨zero, absent⟩
   · obtain ⟨word, output, wordLength⟩ := produced
     have size : word.length = m := wordLength.trans length
-    rcases sound i first word (streamProduces_mem_layer G i output) with collision | empty
+    rcases sound word (streamProduces_mem_layer G i output) with collision | empty
     · obtain ⟨pair, ⟨n, x, y, collision, rfl⟩, rfl⟩ := collision
       obtain ⟨a, b, rfl, rfl, different, same⟩ := collision
       refine ⟨n, ?_⟩
@@ -143,8 +142,82 @@ private theorem collision_atom_has_parameter (h : HashFunction) (G : UniformGene
   · change G.machine.streamLength (generatorData i) stream = m at length
     omega
 
-/-- Expected-size families supported on collisions (possibly also the empty
-word) have inverse-cubic atoms at infinitely many collision parameters. -/
+/-- The active-index form used by the current expected-length definition.
+No condition is imposed on empty or otherwise inactive family members. -/
+theorem HashFunction.infinitely_many_expected_collision_atoms_on_infinite
+    (h : HashFunction) (G : UniformGenerators Bool) (indices : Set ℕ)
+    (infinite : indices.Infinite)
+    (sound : ∀ i ∈ indices, ∀ word ∈ G.layer i,
+      word ∈ h.binaryCollisionLanguage ∨ word = [])
+    (mean : ∀ i ∈ indices,
+      G.machine.expectedLength (generatorData i) = (i : ℝ≥0∞)) :
+    Set.Infinite {n : ℕ | ∃ i ∈ indices, i ≤ 2 * expectedCollisionLength n ∧
+      ((((expectedCollisionLength n : ℝ≥0∞) + 1) ^ 3)⁻¹) ≤
+        fairCoinMeasure {stream |
+          G.machine.streamLength (generatorData i) stream = expectedCollisionLength n}} := by
+  apply Set.infinite_of_forall_exists_gt
+  intro bound
+  obtain ⟨i, active, largeIndex⟩ :=
+    infinite.exists_gt (max 5 (2 * expectedCollisionLength (bound + 1)))
+  have hi : 5 ≤ i := by omega
+  obtain ⟨m, index, atom⟩ := exists_heavy_length_atom fairCoinMeasure
+    (G.machine.streamLength (generatorData i))
+    (G.machine.measurable_streamLength (generatorData i)) i hi (mean i active)
+  have positive : 0 < m := by omega
+  have atom_pos : 0 < fairCoinMeasure {stream |
+      G.machine.streamLength (generatorData i) stream = m} := by
+    have nonzero : (((m : ℝ≥0∞) + 1) ^ 3)⁻¹ ≠ 0 := by
+      apply ENNReal.inv_ne_zero.mpr
+      exact ENNReal.pow_ne_top (by simp)
+    exact (bot_lt_iff_ne_bot.mpr nonzero).trans_le atom
+  obtain ⟨n, size⟩ := collision_atom_has_parameter h G i m positive
+    (sound i active) atom_pos
+  refine ⟨n, ⟨i, active, ?_, ?_⟩, ?_⟩
+  · simpa only [size] using index
+  · simpa only [size] using atom
+  · rw [size] at index
+    unfold expectedCollisionLength at largeIndex index
+    omega
+
+/-- Infinitely many productive indices suffice for the native collision
+reduction. Neither short accepting paths nor index coverage is assumed. -/
+theorem HashFunction.expected_collision_generator_contradiction_on_infinite
+    (h : HashFunction) (secure : h.CollisionResistant)
+    (G : UniformGenerators Bool) (indices : Set ℕ) (infinite : indices.Infinite)
+    (p : PolynomialBound)
+    (sound : ∀ i ∈ indices, ∀ word ∈ G.layer i,
+      word ∈ h.binaryCollisionLanguage ∨ word = [])
+    (mean : ∀ i ∈ indices,
+      G.machine.expectedLength (generatorData i) = (i : ℝ≥0∞))
+    (runtime : ∀ i ∈ indices,
+      G.machine.expectedRuntime (generatorData i) ≤ (p i : ℝ≥0∞))
+    (A : CollisionFinder)
+    (simulation : ∀ n i, i ≤ 2 * expectedCollisionLength n →
+      {stream | G.machine.streamLength (generatorData i) stream = expectedCollisionLength n ∧
+        G.machine.streamRuntime (generatorData i) stream ≤ (expectedCollisionClock p n : ℝ≥0∞)} ⊆
+          collisionSuccess h A n) : False := by
+  apply secure
+  refine ⟨A, expectedCollisionDenominator, ?_⟩
+  apply (h.infinitely_many_expected_collision_atoms_on_infinite G indices infinite sound mean).mono
+  rintro n ⟨i, active, index, atom⟩
+  have joint := measure_joint_runtime_ge_half fairCoinMeasure
+    {stream | G.machine.streamLength (generatorData i) stream = expectedCollisionLength n}
+    (G.machine.streamRuntime (generatorData i))
+    (G.machine.measurable_streamRuntime (generatorData i)).aemeasurable
+    (p i : ℝ≥0∞) (expectedCollisionClock p n : ℝ≥0∞)
+    ((((expectedCollisionLength n : ℝ≥0∞) + 1) ^ 3)⁻¹)
+    (runtime i active)
+    (by exact_mod_cast (expectedCollisionClock_positive p n).ne')
+    (ENNReal.natCast_ne_top _) atom (by simp)
+    (expectedCollisionClock_loss p n i index)
+  have contained : fairCoinMeasure {stream |
+      G.machine.streamLength (generatorData i) stream = expectedCollisionLength n ∧
+      G.machine.streamRuntime (generatorData i) stream ≤ (expectedCollisionClock p n : ℝ≥0∞)} ≤
+        fairCoinMeasure (collisionSuccess h A n) := measure_mono (simulation n i index)
+  exact (expectedCollisionDenominator_strict n).trans_le (joint.trans contained)
+
+/-- Compatibility form with a cofinal tail of productive indices. It is a
+special case of the current arbitrary-infinite-active-index result. -/
 theorem HashFunction.infinitely_many_expected_collision_atoms (h : HashFunction)
     (G : UniformGenerators Bool) (firstIndex : ℕ)
     (sound : ∀ i, firstIndex ≤ i → ∀ word ∈ G.layer i,
@@ -155,40 +228,15 @@ theorem HashFunction.infinitely_many_expected_collision_atoms (h : HashFunction)
       ((((expectedCollisionLength n : ℝ≥0∞) + 1) ^ 3)⁻¹) ≤
         fairCoinMeasure {stream |
           G.machine.streamLength (generatorData i) stream = expectedCollisionLength n}} := by
-  let mass : ℕ → ℕ → ℝ≥0∞ := fun i m =>
-    fairCoinMeasure {stream | G.machine.streamLength (generatorData i) stream = m}
-  have total : ∀ i, firstIndex ≤ i → (∑' m : ℕ, mass i m) ≤ 1 := by
-    intro i hi
-    exact (tsum_nat_atom_measures_eq_one fairCoinMeasure
-      (G.machine.streamLength (generatorData i)) (G.machine.measurable_streamLength _)).le
-  have moment : ∀ i, firstIndex ≤ i →
-      (∑' m : ℕ, (m : ℝ≥0∞) * mass i m) = (i : ℝ≥0∞) := by
-    intro i hi
-    rw [← lintegral_nat_eq_tsum_atoms fairCoinMeasure
-      (G.machine.streamLength (generatorData i)) (G.machine.measurable_streamLength _)]
-    exact mean i hi
-  apply Set.infinite_of_forall_exists_gt
-  intro bound
-  obtain ⟨i, m, first, large, index, atom⟩ :=
-    unbounded_heavy_length_atoms_of_mass mass firstIndex total moment
-      (expectedCollisionLength (bound + 1))
-  have positive : 0 < m := by unfold expectedCollisionLength at large; omega
-  have atom_pos : 0 < mass i m := by
-    have nonzero : (((m : ℝ≥0∞) + 1) ^ 3)⁻¹ ≠ 0 := by
-      apply ENNReal.inv_ne_zero.mpr
-      exact ENNReal.pow_ne_top (by simp)
-    exact (bot_lt_iff_ne_bot.mpr nonzero).trans_le atom
-  obtain ⟨n, size⟩ := collision_atom_has_parameter h G firstIndex i m first positive sound atom_pos
-  refine ⟨n, ⟨i, first, ?_, ?_⟩, ?_⟩
-  · simpa only [size] using index
-  · simpa only [size] using atom
-  · rw [size] at large
-    unfold expectedCollisionLength at large
-    omega
+  have infinite : (Set.Ici firstIndex).Infinite := by
+    apply Set.infinite_of_forall_exists_gt
+    intro bound
+    exact ⟨max firstIndex (bound + 1), by simp only [Set.mem_Ici]; omega, by omega⟩
+  exact h.infinitely_many_expected_collision_atoms_on_infinite G (Set.Ici firstIndex)
+    infinite sound mean
 
-/-- A native collision finder with the stated bounded-search simulation property
-contradicts collision resistance. The surrounding compiler supplies this property;
-it is neither assumed globally nor hidden as an axiom. -/
+/-- The previous eventual-index reduction is retained as a specialization, not
+as a second first-moment proof. -/
 theorem HashFunction.expected_collision_generator_contradiction (h : HashFunction)
     (secure : h.CollisionResistant) (G : UniformGenerators Bool) (firstIndex : ℕ)
     (p : PolynomialBound)
@@ -203,26 +251,11 @@ theorem HashFunction.expected_collision_generator_contradiction (h : HashFunctio
       {stream | G.machine.streamLength (generatorData i) stream = expectedCollisionLength n ∧
         G.machine.streamRuntime (generatorData i) stream ≤ (expectedCollisionClock p n : ℝ≥0∞)} ⊆
           collisionSuccess h A n) : False := by
-  apply secure
-  refine ⟨A, expectedCollisionDenominator, ?_⟩
-  apply (h.infinitely_many_expected_collision_atoms G firstIndex sound mean).mono
-  rintro n ⟨i, first, index, atom⟩
-  have joint := measure_joint_runtime_ge_half fairCoinMeasure
-    {stream | G.machine.streamLength (generatorData i) stream = expectedCollisionLength n}
-    (G.machine.streamRuntime (generatorData i))
-    (G.machine.measurable_streamRuntime (generatorData i)).aemeasurable
-    (p i : ℝ≥0∞) (expectedCollisionClock p n : ℝ≥0∞)
-    ((((expectedCollisionLength n : ℝ≥0∞) + 1) ^ 3)⁻¹)
-    (runtime i first)
-    (by exact_mod_cast (expectedCollisionClock_positive p n).ne')
-    (ENNReal.natCast_ne_top _)
-    atom
-    (by simp)
-    (expectedCollisionClock_loss p n i index)
-  have contained : fairCoinMeasure {stream |
-      G.machine.streamLength (generatorData i) stream = expectedCollisionLength n ∧
-      G.machine.streamRuntime (generatorData i) stream ≤ (expectedCollisionClock p n : ℝ≥0∞)} ≤
-        fairCoinMeasure (collisionSuccess h A n) := measure_mono (simulation n i index)
-  exact (expectedCollisionDenominator_strict n).trans_le (joint.trans contained)
+  have infinite : (Set.Ici firstIndex).Infinite := by
+    apply Set.infinite_of_forall_exists_gt
+    intro bound
+    exact ⟨max firstIndex (bound + 1), by simp only [Set.mem_Ici]; omega, by omega⟩
+  exact h.expected_collision_generator_contradiction_on_infinite secure G
+    (Set.Ici firstIndex) infinite p sound mean runtime A simulation
 
 end ComplexityOfGenerators

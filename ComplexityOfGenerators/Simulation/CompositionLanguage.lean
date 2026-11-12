@@ -5,14 +5,14 @@ namespace ComplexityOfGenerators.Simulation
 noncomputable section
 set_option backward.isDefEq.respectTransparency false
 
-variable {α : Type} [Fintype α] (S : Machine Unit Bool Bool) (R : Machine Unit Bool α)
+variable {α β : Type} [Fintype α] [Fintype β] (S : Machine Unit Bool β) (R : Machine Unit β α)
 
 /-- Join actual finite witnesses at the number of bits consumed by sampling,
 not at the length of its original witness tape. Unused bits are discarded. -/
 theorem composition_language_complete (n sampleTime : ℕ)
     (sample : S.TimeBound (generatorData n) sampleTime)
-    (certificate : BitString) (sampled : certificate ∈ S.generatedLanguage (generatorData n))
-    (word : List α) (recovered : word ∈ R.generatedLanguage (generatorData n certificate)) :
+    (certificate : List β) (sampled : certificate ∈ S.generatedLanguage (generatorData n))
+    (word : List α) (recovered : word ∈ R.generatedLanguage (certificateData n certificate)) :
     word ∈ (samplerComposition S R).generatedLanguage (generatorData n) := by
   obtain ⟨samplingBits, _, produced⟩ := sampled
   obtain ⟨recoveryBits, positive, recoveryTime, recovery⟩ := recovered
@@ -22,12 +22,12 @@ theorem composition_language_complete (n sampleTime : ℕ)
   obtain ⟨action, output⟩ := S.accepting_observation halted
   let bits := samplingBits.take terminal.randomHead ++ recoveryBits
   have path' := path.replace_suffix (samplerCompositionBank S R) randomBound recoveryBits
-  have handoff := composition_handoff S R n bits terminal (by simpa [generatorData] using action)
+  have handoff := composition_handoff S R n bits terminal (by simpa [generatorData, certificateData] using action)
   rw [output] at handoff
-  have shift := R.runFrom_shift_random (generatorData n certificate)
+  have shift := R.runFrom_shift_random (certificateData n certificate)
     (samplingBits.take terminal.randomHead) recoveryBits R.initialConfiguration recoveryTime
   rw [Machine.runFrom_initial, recovery] at shift
-  have shifted : R.runFrom (generatorData n certificate) bits
+  have shifted : R.runFrom (certificateData n certificate) bits
       {R.initialConfiguration with randomHead := terminal.randomHead} recoveryTime = .halted (.accepted word) := by
     simpa [bits, Machine.shiftRandomConfiguration, Machine.shiftRandomResult, Machine.initialConfiguration,
       List.length_take, Nat.min_eq_left randomBound] using shift
@@ -41,10 +41,10 @@ theorem composition_language_complete (n sampleTime : ℕ)
 theorem composition_language (n sampleTime recoveryTime : ℕ)
     (sample : S.TimeBound (generatorData n) sampleTime)
     (recover : ∀ certificate, certificate ∈ S.generatedLanguage (generatorData n) →
-      R.TimeBound (generatorData n certificate) recoveryTime) :
+      R.TimeBound (certificateData n certificate) recoveryTime) :
     (samplerComposition S R).generatedLanguage (generatorData n) =
       {word | ∃ certificate, certificate ∈ S.generatedLanguage (generatorData n) ∧
-        word ∈ R.generatedLanguage (generatorData n certificate)} := by
+        word ∈ R.generatedLanguage (certificateData n certificate)} := by
   ext word
   constructor
   · rintro ⟨bits, _, t, accepted⟩

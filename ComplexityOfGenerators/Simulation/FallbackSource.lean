@@ -1,5 +1,5 @@
 import ComplexityOfGenerators.Simulation.FallbackOutput
-import ComplexityOfGenerators.Simulation.CompositionExecution
+import ComplexityOfGenerators.Simulation.AuxiliaryComposition
 
 namespace ComplexityOfGenerators.Simulation
 
@@ -13,26 +13,14 @@ theorem fallback_source_no_output (q : CompositionState wordSampler (auxiliaryDe
     (next write work input auxiliary idx emit)
     (table : compositionTransition wordSampler (auxiliaryDecision M) q index origin cell =
       .step next write work input auxiliary idx emit) : emit = none := by
-  cases q
-  case recoverWork q idx certificate =>
-    cases action : M.transition q certificate none none cell.recoverer <;>
-      simp only [compositionTransition, auxiliaryDecision, action] at table
-    all_goals repeat' split at table
-    all_goals simp_all
-  all_goals simp only [compositionTransition] at table
-  all_goals repeat' split at table
-  all_goals simp_all
+  exact auxiliaryComposition_step_no_output wordSampler M q index origin cell
+    next write work input auxiliary idx emit table
 
 theorem fallback_source_output {n : ℕ} {bits : BitString}
     {c d : CompositionConfiguration wordSampler (auxiliaryDecision M)} {t : ℕ}
     (path : (samplerCompositionBank wordSampler (auxiliaryDecision M)).Steps (generatorData n) bits c t d) :
     d.output = c.output := by
-  induction path with
-  | refl => rfl
-  | random c no yes letter t d table lookup rest ih => exact ih
-  | step c next write work input auxiliary index emit t d table rest ih =>
-      have absent := fallback_source_no_output M _ _ _ _ _ _ _ _ _ _ _ table
-      simpa [TransducerBank.TapeBank.advance, absent] using ih
+  exact auxiliaryComposition_output_preserved wordSampler M path
 
 theorem fallback_source_exhausted {n : ℕ} {bits : BitString}
     {c : CompositionConfiguration wordSampler (auxiliaryDecision M)} {t : ℕ}
