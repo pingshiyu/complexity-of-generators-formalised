@@ -57,3 +57,11 @@ The unused `ModelBridge` specifications were removed. Their fields were future
 construction goals, including an assumed SAT generator; they were never proofs
 of those goals. Complete native theorems instead use the actual translators and
 programs identified in their proof modules.
+
+## Theorem entry points
+
+`MainTheorems.lean` collects the current PLDI27 results, resource
+specialisations and concrete SAT/HAMPATH constructions. `HistoricalTheorems.lean`
+retains older theorem names and numbering, including certificate-scheme
+equivalence under the positive binary certificate convention. The root package
+imports both; importing `MainTheorems` alone supplies the current API.

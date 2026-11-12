@@ -1,4 +1,4 @@
-import ComplexityOfGenerators.MainTheorems
+import ComplexityOfGenerators.HistoricalTheorems
 import ComplexityOfGenerators.Proofs.ElementaryGenerators
 
 /-! Kernel-checked regressions for the replacement Savitch route. The binary

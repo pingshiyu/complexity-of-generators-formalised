@@ -1,2 +1,3 @@
 import ComplexityOfGenerators.MainTheorems
+import ComplexityOfGenerators.HistoricalTheorems
 import ComplexityOfGenerators.Foundations

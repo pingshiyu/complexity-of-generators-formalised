@@ -1,5 +1,6 @@
 import ComplexityOfGenerators.Foundations
 import ComplexityOfGenerators.MainTheorems
+import ComplexityOfGenerators.HistoricalTheorems
 import Lean.Util.CollectAxioms
 
 /-!

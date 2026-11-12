@@ -1,0 +1,27 @@
+import ComplexityOfGenerators.HistoricalTheorems
+
+/-! Import and compatibility checks for the historical theorem API. -/
+
+open ComplexityOfGenerators
+
+#check theorem_5_1_cryptographic_separation
+#check theorem_6_1_polynomial_space_generation
+#check theorem_7_1_generators_are_certificate_schemes
+#check theorem_7_2_efficient_generators_are_not_composable
+#check proposition_a23_2_exact_recursive_generation
+#check theorem_expected_length_collision_non_generability
+#check theorem_expected_length_generators_are_not_composable
+#check theorem_expected_length_infinite_intersection_nonclosure
+
+#check layerFastELEPG_union
+#check layerFastELEPG_concatenation
+#check layerFastELEPG_star
+
+#print axioms theorem_5_1_cryptographic_separation
+#print axioms theorem_6_1_polynomial_space_generation
+#print axioms theorem_7_1_generators_are_certificate_schemes
+#print axioms theorem_7_2_efficient_generators_are_not_composable
+#print axioms proposition_a23_2_exact_recursive_generation
+#print axioms theorem_expected_length_collision_non_generability
+#print axioms theorem_expected_length_generators_are_not_composable
+#print axioms theorem_expected_length_infinite_intersection_nonclosure

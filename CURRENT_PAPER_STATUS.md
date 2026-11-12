@@ -2,17 +2,21 @@
 
 This file compares the Lean sources with the PLDI27 manuscript in
 `../complexity-of-randomised-testing/PLDI27`, as examined on 12 November 2026.
-The bundled PDF and historical theorem entry points use older numbering.
+`MainTheorems.lean` collects current results; `HistoricalTheorems.lean` retains
+the older entry points and numbering of the bundled PDF.
 A compiled helper or semantic construction is not counted as a compiled native
 generator for the whole paper result.
 
 | Current paper result | Checked result | Remaining obligation |
 | --- | --- | --- |
+| Theorem 3.1, `RE = GEN` | Complete: `theorem_3_1_generability_is_recursive_enumerability` | None in the native model |
+| Lemma 4.1, acceptance at the time bound | Complete: `lemma_4_1_acceptance_at_time_bound` | Native complete-prefix convention is `time + 1` bits |
 | Proposition 4.1, general time/space containments | Complete TIME and SPACE containments in the explicit finite multitape model, with charged constructors, configuration clocks, matching and binary index simulation | None in this model |
 | Proposition 4.2, up-to resource characterisations | Complete general TIME and SPACE equalities under the paper’s constructibility, monotonicity and lower-bound hypotheses; native polynomial specialisations over every finite alphabet | None in these models |
+| Proposition 5.1, CNF-SAT in PG | Complete: `proposition_5_1_cnf_sat_polynomial_generation` | Concrete padded-CNF encoding |
 | Proposition 5.2, `PG ⊆ EPG ⊆ NP` | Complete: `proposition_5_2_expected_polynomial_generation` | None in the native model |
 | Theorem 5.1, infinite `EPG ⊆ ELEPG ⊆ NP` | Complete: `theorem_5_1_expected_generation_containments` | None in the native model |
-| Theorem 5.2, collision non-generability | Complete in the stronger raw form: `theorem_5_2_raw_expected_length_collision_non_generability` | None in the native binary collision encoding |
+| Theorem 5.2, collision non-generability | Complete: `theorem_5_2_collision_non_generability`, plus the stronger raw form `theorem_5_2_raw_expected_length_collision_non_generability` | None in the native binary collision encoding |
 | Proposition 6.3, positive closure of all three classes | Complete native PG/EPG/ELEPG union, concatenation and Kleene star; current ELEPG uses original-source calls and global word-length fast paths | None in the native model |
 | SAT exact-recursive construction | Complete: `PaddedCNF.polynomialSelfReduction`, `PaddedCNF.exactlyRecursivelyGenerable`, and `PaddedCNF.language_mem_pg`, using the native base/inverse machines | None for the concrete padded-CNF encoding |
 | HAMPATH exact-recursive construction | Complete: `HAMPATH.polynomialSelfReduction`, `HAMPATH.exactlyRecursivelyGenerable`, and `HAMPATH.language_mem_pg`, using the native base/inverse machines | None for the concrete loop-free directed adjacency-matrix encoding |
@@ -53,8 +57,11 @@ acceptance without a further transition, so a safe complete prefix has
 
 Current Theorem 6.1 now has checked complement and infinite-intersection
 nonclosure for PG, EPG and ELEPG. These results use the revised definitions.
-Historical GEN=RE, certificate-scheme equivalence, general exact-recursive
-implies PG, and PSPACEG=PSPACE proofs remain available.
+The current GEN=RE theorem, exact-recursive criterion and concrete SAT/HAMPATH
+results have explicit entry points in `MainTheorems`. The exact-recursive
+criterion is `proposition_6_2_exact_recursive_generation`, under the documented
+all-label native inverse interface. Older certificate-scheme conventions,
+PSPACEG=PSPACE and historical aliases remain in `HistoricalTheorems`.
 
 ## Refactoring and compilation
 

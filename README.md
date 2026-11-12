@@ -70,10 +70,12 @@ The existing general
 remains fully proved, including optional stopping after reaching the target
 length, empty slices, the empty word and the empty alphabet.
 
-[MainTheorems.lean](ComplexityOfGenerators/MainTheorems.lean) is the public theorem
-API. [Definition cross-reference](DEFINITION_CROSS_REFERENCE.md) records model
-conventions. Historical GEN=RE, certificate-scheme equivalence and
-PSPACEG=PSPACE proofs remain available. Native decision classes are not silently
+[MainTheorems.lean](ComplexityOfGenerators/MainTheorems.lean) collects the current
+PLDI27 results in paper order, including GEN=RE and the SAT/HAMPATH examples.
+[HistoricalTheorems.lean](ComplexityOfGenerators/HistoricalTheorems.lean) retains
+older numbering, certificate-scheme conventions and the historical PSPACEG
+equality. [Definition cross-reference](DEFINITION_CROSS_REFERENCE.md) records model
+conventions. Native decision classes are not silently
 identified with Complexitylib's classes; individual space translations used by
 the proofs are themselves verified.
 
@@ -104,5 +106,7 @@ compatibility backport; see [patches](patches/README.md). Upstream VCVio may
 emit deprecation warnings. No local unfinished-proof warning is expected.
 
 Import individual proof modules for a smaller dependency set. Import
-`ComplexityOfGenerators` for the public theorem API, or
+`ComplexityOfGenerators.MainTheorems` for current paper results,
+`ComplexityOfGenerators.HistoricalTheorems` for historical aliases, or the root
+`ComplexityOfGenerators` module for both. Import
 `ComplexityOfGenerators.Foundations` for the complete supporting development.

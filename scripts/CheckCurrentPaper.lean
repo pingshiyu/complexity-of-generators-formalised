@@ -1,4 +1,4 @@
-import ComplexityOfGenerators
+import ComplexityOfGenerators.MainTheorems
 
 /-! Smoke checks for the current public statements, including both general
 resource characterisations and all native positive closure clauses. -/
@@ -39,13 +39,9 @@ open ComplexityOfGenerators
 #print axioms ComplexityOfGenerators.proposition_6_3_pg_star
 
 #check proposition_6_3_epg_union
-#check layerFastELEPG_union
 #check proposition_6_3_epg_concatenation
-#check layerFastELEPG_concatenation
 #print axioms proposition_6_3_epg_union
-#print axioms layerFastELEPG_union
 #print axioms proposition_6_3_epg_concatenation
-#print axioms layerFastELEPG_concatenation
 
 #check Examples.PaddedCNF.NativeEvaluation.NativeVerifier.machine_correct
 #check Examples.PaddedCNF.BaseSampler.baseFamily_language
@@ -73,9 +69,7 @@ open ComplexityOfGenerators
 #check proposition_6_3_epg_star
 #check proposition_6_3_elepg_star
 #print axioms proposition_6_3_elepg_star
-#check layerFastELEPG_star
 #print axioms proposition_6_3_epg_star
-#print axioms layerFastELEPG_star
 
 #check proposition_4_1_time
 #check proposition_4_2_time_forward
@@ -95,3 +89,18 @@ open ComplexityOfGenerators
 #check proposition_6_3_elepg_concatenation
 #print axioms proposition_6_3_elepg_union
 #print axioms proposition_6_3_elepg_concatenation
+
+#check theorem_3_1_generability_is_recursive_enumerability
+#check corollary_non_recursively_enumerable_not_generable
+#check lemma_4_1_acceptance_at_time_bound
+#check corollary_5_1_polynomial_generation_subset_np
+#check proposition_5_1_cnf_sat_polynomial_generation
+#check observation_collision_language_polynomial_decision
+#check theorem_5_2_collision_non_generability
+#check corollary_collision_resistance_separates_polynomial_generation
+#check proposition_6_2_exact_recursive_generation
+#check example_sat_polynomial_self_reduction
+#check example_sat_exact_recursive_generation
+#check example_hampath_polynomial_self_reduction
+#check example_hampath_exact_recursive_generation
+#check example_hampath_polynomial_generation
