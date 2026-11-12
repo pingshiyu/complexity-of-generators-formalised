@@ -35,8 +35,8 @@ theorem binaryCollisionFinder_full_trial (h : HashFunction) (G : GeneratorFamily
   obtain ⟨x, y, collision, produced⟩ := binary_collision_decoder_full_trial h G language seed time bound n bits length
   exact ⟨x, y, collision, collisionIndexMachine_produces (binaryOutputDecoder G.machine) n bits _ produced⟩
 
-/-- The cryptographic non-generability conclusion used in Theorem 5.1, with no
-extra computational assumptions: the attacker and its runtime are constructed. -/
+/-- Binary collision non-generability, underlying the separation in current
+Theorem 5.2. The attacker and its runtime are constructed. -/
 theorem HashFunction.binaryCollisionLanguage_not_mem_pg (h : HashFunction) (secure : h.CollisionResistant) :
     h.binaryCollisionLanguage ∉ PG Bool := by
   rintro ⟨G, language, seed, time, bound⟩

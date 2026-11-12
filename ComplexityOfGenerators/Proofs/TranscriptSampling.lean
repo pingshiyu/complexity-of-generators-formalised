@@ -2,13 +2,18 @@ import ComplexityOfGenerators.Simulation.TranscriptSamplerCorrectness
 import ComplexityOfGenerators.Proofs.TranscriptRecovery
 
 /-!
-# A polynomial sampler of genuine replay certificates
+# A polynomial sampler of genuine binary replay certificates
 
-The finite sampler preserves acceptance on each random tape, hence also the
-accepted stream set and almost-sure productivity. Its output always starts
-with a padding bit. Every emitted certificate replays to a source output of
-the requested length, and every source output has a sampled certificate.
-These results include empty words and the empty-generator case.
+The finite sampler preserves acceptance on each random tape and hence the
+accepted stream set and almost-sure productivity. Its output starts with a
+padding bit. Every emitted certificate replays to an output of the requested
+length, and every source output has a sampled certificate. Empty instance
+words and empty generators are included.
+
+These binary transcripts serve both the retained certificate interface and
+the current Definition 6.1. `Proofs.PaperCertificateEquivalence` encodes them
+in the instance alphabet and proves the current Proposition 6.1, including
+empty certificates and accepting-only runtime premises.
 -/
 
 namespace ComplexityOfGenerators
@@ -117,8 +122,8 @@ theorem transcriptUniformSampler_polynomial (G : UniformGenerators α) (polynomi
   have upper := PolynomialBound.add_le (two.mul time) one n
   simpa [PolynomialBound.mul, two, one, PolynomialBound.eval, Nat.mul_assoc] using upper
 
-/-- Every sampled certificate recovers an instance of the requested length,
-which is the user's added nonempty-recovery condition for Definition 7.4. -/
+/-- Every sampled certificate recovers an instance of the requested
+length, giving the nonempty-recovery condition in current Definition 6.1. -/
 theorem transcriptSampler_recovers_instance (G : GeneratorFamily α) (n : ℕ) (certificate : BitString)
     (sampled : certificate ∈ (transcriptUniformSampler G.toUniformGenerators).layer n) :
     certificate ≠ [] ∧ ∃ word, word.length = n ∧

@@ -30,6 +30,14 @@ import ComplexityOfGenerators.Proofs.Multitape.SpaceContainment
 import ComplexityOfGenerators.Examples.SATNative.ExactRecursive
 import ComplexityOfGenerators.Examples.HAMPATHNative.ExactRecursive
 
+import ComplexityOfGenerators.Proofs.PaperCertificateEquivalence
+import ComplexityOfGenerators.Proofs.PaperExactRecursiveGeneration
+import ComplexityOfGenerators.Proofs.PaperExactRecursiveLegacy
+import ComplexityOfGenerators.Proofs.PairCollisionDecision
+import ComplexityOfGenerators.Proofs.PairCollisionNonGenerability
+import ComplexityOfGenerators.Proofs.AlphabetIntersectionNonclosure
+import ComplexityOfGenerators.Proofs.AlphabetComplementNonclosure
+
 /-!
 # Current PLDI27 theorem API
 
@@ -39,9 +47,10 @@ Historical theorem aliases and retained certificate conventions are collected
 separately in `HistoricalTheorems`. The root package imports both APIs.
 
 Every declaration has a kernel-checked proof in the model identified by its
-type. General resource results use the explicit multitape model. Encoding and
-interface qualifications are recorded in `DEFINITION_CROSS_REFERENCE.md` and
-`CURRENT_PAPER_STATUS.md`.
+type. General resource results use the explicit multitape model. The current
+certificate and exact-recursive interfaces use the paper's accepting-run bounds;
+collision statements use the literal separated-pair language. Model conventions
+are recorded in `DEFINITION_CROSS_REFERENCE.md` and `ARTIFACT_README.md`.
 -/
 
 namespace ComplexityOfGenerators
@@ -155,32 +164,28 @@ theorem theorem_5_1_expected_generation_containments
 /-- The collision-language observation in Section 5.3 needs no security
 assumption; the native hash implementations give a polynomial decider. -/
 theorem observation_collision_language_polynomial_decision (h : HashFunction) :
-    h.binaryCollisionLanguage ∈ P Bool := h.binaryCollisionLanguage_mem_p
+    h.collisionLanguage ∈ P PairSymbol := h.collisionLanguage_mem_p
 
-/-- Current Theorem 5.2 in its stated ELEPG form. The stronger raw result
+/-- Current Theorem 5.2 for the literal `x#y` language over `PairSymbol`. The stronger raw result
 below removes the global fast-path condition as well. -/
 theorem theorem_5_2_collision_non_generability
     (h : HashFunction) (secure : h.CollisionResistant) :
-    h.binaryCollisionLanguage ∉ ELEPG Bool :=
-  h.binaryCollisionLanguage_not_mem_elepg secure
+    h.collisionLanguage ∉ ELEPG PairSymbol :=
+  h.collisionLanguage_not_mem_elepg secure
 
 /-- **Current Theorem 5.2, stronger raw form.** Neither short accepting paths
 nor polynomial producing-index coverage is assumed. Only infinitely many active
 indices and the two first-moment bounds are needed. -/
 theorem theorem_5_2_raw_expected_length_collision_non_generability
     (h : HashFunction) (secure : h.CollisionResistant) :
-    h.binaryCollisionLanguage ∉ ExpectedLengthExpectedPolynomialTime Bool :=
-  h.binaryCollisionLanguage_not_mem_expectedLengthExpectedPolynomialTime secure
+    h.collisionLanguage ∉ ExpectedLengthExpectedPolynomialTime PairSymbol :=
+  h.collisionLanguage_not_mem_expectedLengthExpectedPolynomialTime secure
 
 /-- The PG and EPG exclusions follow from the stronger collision obstruction. -/
 theorem corollary_5_2_collision_non_generability
     (h : HashFunction) (secure : h.CollisionResistant) :
-    h.binaryCollisionLanguage ∉ PG Bool ∧ h.binaryCollisionLanguage ∉ EPG Bool := by
-  have expected : h.binaryCollisionLanguage ∉ EPG Bool := by
-    intro member
-    exact h.binaryCollisionLanguage_not_mem_elepg secure
-      (epg_mem_elepg_of_infinite member h.binaryCollisionLanguage_infinite)
-  exact ⟨fun member => expected (pg_subset_epg member), expected⟩
+    h.collisionLanguage ∉ PG PairSymbol ∧ h.collisionLanguage ∉ EPG PairSymbol :=
+  ⟨h.collisionLanguage_not_mem_pg secure,h.collisionLanguage_not_mem_epg secure⟩
 
 /-- The class separation illustrated in the current paper: a collision
 language in P witnesses both strict PG containment in NP and `P ⊈ PG`. -/
@@ -189,22 +194,29 @@ theorem corollary_collision_resistance_separates_polynomial_generation
     PG Bool ⊂ NP Bool ∧ ¬ P Bool ⊆ PG Bool := by
   obtain ⟨hash, secure⟩ := hashes
   have decidable := hash.binaryCollisionLanguage_mem_p
-  have outside := (corollary_5_2_collision_non_generability hash secure).1
+  have outside := hash.binaryCollisionLanguage_not_mem_pg secure
   refine ⟨⟨pg_subset_np, ?_⟩, ?_⟩
   · intro reverseContainment
     exact outside (reverseContainment (p_subset_np decidable))
   · intro containment
     exact outside (containment decidable)
 
-/-! ## Exact-recursive constructions -/
+/-! ## Conditions for polynomial generation -/
 
-/-- Current Proposition 6.2 for the native exact-recursive interface.
-The retained interface supplies inverses for all labels; the paper's bounded-
-label API qualification is recorded in `DEFINITION_CROSS_REFERENCE.md`. -/
+/-- Current Proposition 6.1, with certificates in the instance alphabet,
+including the empty certificate, and accepting-run bounds for both generators. -/
+theorem proposition_6_1_generators_are_certificate_schemes
+    {α : Type} [Fintype α] (L : Language α) :
+    L ∈ PG α ↔ ∃ V : PaperCertificates.PolynomialVerifier L,
+      PaperCertificates.HasCertificateScheme V :=
+  PaperCertificates.certificate_equivalence L
+
+/-- Current Proposition 6.2. The inverse generator is constrained only on the
+paper's bounded labels, with accepting-run bounds rather than trial budgets. -/
 theorem proposition_6_2_exact_recursive_generation
     {α : Type} [Fintype α] {L : Language α}
-    (generable : ExactlyRecursivelyGenerable L) : L ∈ PG α :=
-  exactlyRecursivelyGenerable_mem_pg generable
+    (generable : PaperExactlyRecursivelyGenerable L) : L ∈ PG α :=
+  paperExactlyRecursivelyGenerable_mem_pg generable
 
 /-- The SAT example has actual native polynomial self-reduction machines. -/
 theorem example_sat_polynomial_self_reduction :
@@ -213,8 +225,8 @@ theorem example_sat_polynomial_self_reduction :
 
 /-- The current SAT exact-recursive example, with the padded-CNF codec. -/
 theorem example_sat_exact_recursive_generation :
-    ExactlyRecursivelyGenerable Examples.PaddedCNF.language :=
-  Examples.PaddedCNF.exactlyRecursivelyGenerable
+    PaperExactlyRecursivelyGenerable Examples.PaddedCNF.language :=
+  paperExactlyRecursivelyGenerable_of_legacy Examples.PaddedCNF.exactlyRecursivelyGenerable
 
 /-- The HAMPATH example has actual native polynomial self-reduction machines. -/
 theorem example_hampath_polynomial_self_reduction :
@@ -224,8 +236,8 @@ theorem example_hampath_polynomial_self_reduction :
 /-- The current HAMPATH exact-recursive example uses loop-free directed
 adjacency matrices; longer cycles are allowed. -/
 theorem example_hampath_exact_recursive_generation :
-    ExactlyRecursivelyGenerable Examples.HAMPATH.language :=
-  Examples.HAMPATH.exactlyRecursivelyGenerable
+    PaperExactlyRecursivelyGenerable Examples.HAMPATH.language :=
+  paperExactlyRecursivelyGenerable_of_legacy Examples.HAMPATH.exactlyRecursivelyGenerable
 
 /-- The concrete HAMPATH construction yields polynomial exact generation. -/
 theorem example_hampath_polynomial_generation :
@@ -276,25 +288,28 @@ polynomial word-length fast paths, with no per-layer fast-path premise. -/
 theorem proposition_6_3_elepg_star {α : Type} [Fintype α] {L : Language α}
     (member : L ∈ ELEPG α) : IndexedSupport.star L ∈ ELEPG α := elepg_star member
 
-/-- **Current Theorem 6.1, complement clause.** The three classes use the current
+/-- **Current Theorem 6.1, complement clause.** The alphabet has at least two
+symbols, following the paper's alphabet convention. The classes use the current
 expected-time and active-index definitions. -/
-theorem theorem_6_1_complement_nonclosure (different : NP Bool ≠ coNP Bool) :
-    ¬ ClosedUnderComplement (PG Bool) ∧
-    ¬ ClosedUnderComplement (EPG Bool) ∧ ¬ ClosedUnderComplement (ELEPG Bool) :=
-  ⟨pg_not_complement_closed different, epg_not_complement_closed different,
-    elepg_not_complement_closed different⟩
+theorem theorem_6_1_complement_nonclosure {α : Type} [Fintype α] [Nontrivial α]
+    (different : NP α ≠ coNP α) :
+    ¬ ClosedUnderComplement (PG α) ∧
+    ¬ ClosedUnderComplement (EPG α) ∧ ¬ ClosedUnderComplement (ELEPG α) :=
+  ⟨pg_not_complement_closed_alphabet different,epg_not_complement_closed_alphabet different,
+    elepg_not_complement_closed_alphabet different⟩
 
 /-- **Current Theorem 6.1, intersection clause.** Every class has witnesses
 whose intersection is infinite, avoiding a finite-language boundary artefact. -/
-theorem theorem_6_1_infinite_intersection_nonclosure
+theorem theorem_6_1_infinite_intersection_nonclosure {α : Type} [Fintype α] [Nontrivial α]
     (hashes : CollisionResistantHashFunctionsExist) :
-    (∃ A B : Language Bool, A ∈ PG Bool ∧ B ∈ PG Bool ∧
-      (A ∩ B).Infinite ∧ A ∩ B ∉ PG Bool) ∧
-    (∃ A B : Language Bool, A ∈ EPG Bool ∧ B ∈ EPG Bool ∧
-      (A ∩ B).Infinite ∧ A ∩ B ∉ EPG Bool) ∧
-    (∃ A B : Language Bool, A ∈ ELEPG Bool ∧ B ∈ ELEPG Bool ∧
-      (A ∩ B).Infinite ∧ A ∩ B ∉ ELEPG Bool) :=
-  ⟨pg_infinite_intersection_witness hashes, epg_infinite_intersection_witness hashes,
-    elepg_infinite_intersection_witness hashes⟩
+    (∃ A B : Language α, A ∈ PG α ∧ B ∈ PG α ∧
+      (A ∩ B).Infinite ∧ A ∩ B ∉ PG α) ∧
+    (∃ A B : Language α, A ∈ EPG α ∧ B ∈ EPG α ∧
+      (A ∩ B).Infinite ∧ A ∩ B ∉ EPG α) ∧
+    (∃ A B : Language α, A ∈ ELEPG α ∧ B ∈ ELEPG α ∧
+      (A ∩ B).Infinite ∧ A ∩ B ∉ ELEPG α) :=
+  ⟨pg_infinite_intersection_witness_alphabet hashes,
+    epg_infinite_intersection_witness_alphabet hashes,
+    elepg_infinite_intersection_witness_alphabet hashes⟩
 
 end ComplexityOfGenerators

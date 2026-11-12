@@ -1,16 +1,17 @@
 import ComplexityOfGenerators.Proofs.ExactRecursiveSupport
 
 /-!
-# The stopping condition in the printed proof of Proposition A.23.2
+# Why the inverse walk needs optional stopping
 
 A length-preserving reduction can take a positive-certificate word to a
-zero-certificate word of the same length. Returning immediately after sampling
-that base misses the original word. This file checks that obstruction on a
-concrete self-reduction of the universal binary language.
+zero-certificate word of the same length. A historical variant that stopped
+immediately after sampling that base would miss the original word. This file
+checks the obstruction on a concrete self-reduction of the universal binary
+language.
 
-This is a counterexample to the printed *algorithm's support argument*, not
-to the proposition. `bounded_walk_support` permits an optional stop and handles
-this example without strengthening the self-reduction hypotheses.
+The current proof of Proposition 6.2 in Appendix A.21 uses optional stopping.
+`bounded_walk_support` implements that rule and handles the example without
+strengthening the self-reduction hypotheses.
 -/
 
 namespace ComplexityOfGenerators.SelfReduction
@@ -78,8 +79,8 @@ theorem ancestor_length {n : ℕ} {y : BitString} (ancestor : y ∈ reduction.an
   · exact length
   · exact (iterated_preserves_length path).trans xm.2
 
-/-- The paper's mandatory stopping rule, with a fuel parameter only to make
-the algorithm's set of possible outputs a total Lean definition. -/
+/-- A historical mandatory-stop variant. Fuel makes its possible outputs
+a total Lean function. -/
 def printedWalk (n : ℕ) : ℕ → BitString → Language Bool
   | 0, y => {x | x = y ∧ y.length = n}
   | fuel + 1, y => if y.length = n then {y} else
@@ -91,8 +92,8 @@ theorem printedWalk_at_length (n fuel : ℕ) {y : BitString} (length : y.length 
   | zero => ext x; simp [printedWalk, length]
   | succ fuel => simp [printedWalk, length]
 
-/-- `[true]` belongs to the target slice but cannot be emitted under the
-printed mandatory stopping rule, regardless of the fuel allowance. -/
+/-- `[true]` belongs to the target slice but cannot be produced by the
+historical mandatory-stop variant at any fuel allowance. -/
 theorem printed_algorithm_misses_member (fuel : ℕ) :
     [true] ∈ lengthSlice (Set.univ : Language Bool) 1 ∧
       ¬ ∃ y ∈ reduction.bases 1, [true] ∈ printedWalk 1 fuel y := by
@@ -103,7 +104,7 @@ theorem printed_algorithm_misses_member (fuel : ℕ) :
   have zero := base.2
   simp [← equal, reduction, rank] at zero
 
-/-- The corrected bounded support theorem includes the omitted word. -/
+/-- The optional-stopping support theorem includes the omitted word. -/
 theorem optional_stop_covers_member :
     ∃ y ∈ reduction.bases 1, [true] ∈ reduction.walkOutputs 1 (reduction.rankBound 1) y := by
   have member : [true] ∈ lengthSlice (Set.univ : Language Bool) 1 := ⟨Set.mem_univ _, rfl⟩

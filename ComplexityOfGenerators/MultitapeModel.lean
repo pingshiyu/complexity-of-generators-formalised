@@ -79,7 +79,7 @@ def TimeBound (data : InputData I A) (time : ℕ) : Prop :=
   ∀ bits, ∃ ticks result, ticks ≤ time ∧
     M.Executes data bits M.initialConfiguration ticks result
 
-/-- Only accepted branches are bounded, exactly as in paper Definition 4.3. -/
+/-- Only accepting branches are bounded, following the paper's runtime convention. -/
 def AcceptingTimeBound (data : InputData I A) (time : ℕ) : Prop :=
   ∀ bits ticks word,
     M.Executes data bits M.initialConfiguration ticks (.accepted word) → ticks ≤ time

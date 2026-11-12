@@ -2,11 +2,16 @@ import ComplexityOfGenerators.Proofs.TranscriptScheme
 import ComplexityOfGenerators.Simulation.TranscriptVerifier
 
 /-!
-# The forward implication of Theorem 7.1
+# Polynomial generators yield retained binary certificate schemes
 
-A polynomial generator supplies a concrete native polynomial verifier and a
-certificate scheme for that same verifier. Neither the verifier nor either
-component of the scheme is an assumed simulation interface.
+A polynomial generator supplies a concrete native polynomial verifier and
+certificate scheme under the historical positive binary certificate and
+finite-trial conventions. The verifier, sampler and recoverer are all native
+machines with proved costs.
+
+The current Definition 6.1 and Proposition 6.1, with same-alphabet certificates,
+empty certificates and accepting-only bounds, are formalised in
+`PaperCertificates` and `Proofs.PaperCertificateEquivalence`.
 -/
 
 namespace ComplexityOfGenerators
@@ -52,8 +57,8 @@ theorem generatorTranscriptVerifier_verifies :
   intro word certificate _
   exact transcriptVerifierMachine_accepts G.machine word certificate
 
-/-- Complete native construction of the certificate scheme from a polynomial
-generator, preserving empty words and the nonempty recovery requirement. -/
+/-- Native construction of the retained binary certificate scheme from a
+polynomial generator, including empty instances and nonempty recovery targets. -/
 theorem generatorTranscriptVerifier_hasScheme :
     HasCertificateScheme (generatorTranscriptVerifier G seed time bound) :=
   transcriptScheme_of_verifier G _ (generatorTranscriptVerifier_verifies G seed time bound) ⟨seed, time, bound⟩

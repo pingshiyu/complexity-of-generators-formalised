@@ -4,7 +4,7 @@ import ComplexityOfGenerators.Foundations.ResourceBounds
 import ComplexityOfGenerators.Foundations.BoundedGeneration
 
 /-!
-# The polynomial-depth reachability reduction for Theorem 6.1
+# Polynomial-depth reachability for the historical polynomial-space characterisation
 
 Membership in a polynomial-space generator's language is decided by midpoint
 search with polynomial recursion depth and polynomial-size configuration

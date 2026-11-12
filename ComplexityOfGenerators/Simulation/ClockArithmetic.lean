@@ -152,7 +152,7 @@ theorem clockFuel_increment (n remaining : ℕ) (ds : List ℕ)
   | zero => rfl
   | succ k ih => simp [List.replicate_succ, clockDigitValue, ih]
 
-/-- Initializing all markers at the origin gives exactly the approved
+/-- Initializing all markers at the origin gives exactly the specified
 polynomial budget, including degree zero and empty inputs. -/
 theorem clockFuel_initial (p : PolynomialBound) (n : ℕ) :
     clockFuel n p.coefficient (List.replicate p.degree 0) = p n := by

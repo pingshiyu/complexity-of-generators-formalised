@@ -2,14 +2,16 @@ import ComplexityOfGenerators.Proofs.SelfReduction
 import Mathlib.Data.Nat.Log
 
 /-!
-# Bounded inverse walks for Proposition A.23.2
+# Bounded inverse walks for Proposition 6.2
 
-This file proves the support and progress arguments for a corrected algorithm.
-At a length-`n` word the algorithm may either stop or continue along a nonempty
-inverse label. Stopping unconditionally at the first length-`n` word, as in the
-printed proof, need not give full support when reductions preserve word length.
+These support and progress arguments implement the optional-stopping rule
+used in Appendix A.21: at a length-`n` word the walk may stop or continue along
+a nonempty inverse label. A mandatory stop at the first length-`n` word need
+not give full support when reductions preserve representation length.
 
-These are semantic and resource-counting lemmas, not a native loop compiler.
+The native controller is constructed in `Proofs.ExactRecursiveGeneration`;
+`Proofs.PaperExactRecursiveGeneration` supplies its inputs from the current
+bounded-label, accepting-time interface.
 -/
 
 namespace ComplexityOfGenerators.SelfReduction
@@ -74,8 +76,8 @@ theorem walk_covers_path {n : ℕ} {x y : Word α} (member : x ∈ lengthSlice L
     | succ fuel =>
       exact Or.inr ⟨z, R.up_iff.mpr ⟨za, step⟩, ih zm fuel (by omega)⟩
 
-/-- A bounded inverse walk from the base language has exactly the desired
-support. This is the language part of Proposition A.23.2, not `PG` membership. -/
+/-- A bounded optional inverse walk from the base language has exactly the
+target support. This establishes the support component of Proposition 6.2. -/
 theorem bounded_walk_support (n : ℕ) :
     {x | ∃ y ∈ R.bases n, x ∈ R.walkOutputs n (R.rankBound n) y} = lengthSlice L n := by
   ext x

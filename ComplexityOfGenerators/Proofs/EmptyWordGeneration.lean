@@ -6,8 +6,9 @@ import ComplexityOfGenerators.Certificates
 
 The size-zero slice accepts immediately and every positive-size slice consumes
 its random tape to exhaustion. This is a native uniform generator, including
-the separate seed/time budgets of Remark 1. It also supplies a counterexample
-to the literal empty-word exclusion in the paper's certificate definitions.
+the internal separate seed/time budgets. It also supplies a counterexample
+to an empty-word exclusion from the historical certificate interface.
+The current paper's Definition 6.1 allows empty instances and certificates.
 -/
 
 namespace ComplexityOfGenerators
@@ -141,8 +142,9 @@ theorem empty_word_language_in_pg : ({[]} : Language α) ∈ PG α := by
 
 omit [Fintype α] in
 /-- The original `Σ⁺` restriction prevents even certificate coverage at `L = {ε}`.
-This is about the historical condition, not the corrected certificate scheme,
-and is proved independently of the main theorem. -/
+This concerns `LiteralCertificateCoverage`; neither the retained
+`HasCertificateScheme` interface nor current Definition 6.1 imposes this
+empty-instance exclusion. -/
 theorem empty_word_has_no_literal_certificate_coverage :
     ¬ ∃ V : PolynomialVerifier ({[]} : Language α), LiteralCertificateCoverage V := by
   rintro ⟨V, coverage⟩

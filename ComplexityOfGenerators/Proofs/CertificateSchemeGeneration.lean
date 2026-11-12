@@ -4,12 +4,16 @@ import ComplexityOfGenerators.Simulation.FamilyClock
 import ComplexityOfGenerators.Foundations.TrialBounds
 
 /-!
-# The reverse implication of Theorem 7.1
+# Native generation from retained binary certificate schemes
 
-The sampler is clocked using its polynomial index bound, then compiled with
-the recoverer through the verified finite-bank program. The added condition
-that every sampled certificate certifies an instance ensures every actual
-recovery call has an ordinary polynomial time bound.
+This reverse implication uses the historical positive binary certificate and
+finite-trial interface. The sampler is clocked, then composed with the
+recoverer by the verified finite-bank program. Every sampled certificate has
+a nonempty recovery target, giving a polynomial bound on each recovery call.
+
+The reverse implication under the current Definition 6.1's all-certificate,
+accepting-time interface is proved in `Proofs.PaperCertificateGeneration`;
+`Proofs.PaperCertificateEquivalence` proves the full current Proposition 6.1.
 -/
 
 namespace ComplexityOfGenerators

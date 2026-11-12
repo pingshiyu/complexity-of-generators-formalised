@@ -8,9 +8,9 @@ import Complexitylib.SAT.CookLevin.Corollaries
 
 All results here reuse proved Complexitylib declarations. In particular, neither
 Cook–Levin nor Savitch's theorem is asserted as an axiom or a `sorry`. The Savitch
-API supplies class equality, which is sufficient for the unrelativised Theorem
-6.1; it does not supply the oracle version or an extracted quantitative `s²`
-bound for this project's read-once generator model.
+API supplies class equality for the historical polynomial-space generation
+characterisation. It does not supply an oracle version or an extracted
+quantitative `s²` bound for this project's read-once generator model.
 -/
 
 namespace ComplexityOfGenerators.Standard
@@ -25,7 +25,8 @@ theorem p_closed_under_complement {K : Complexity.Language} (h : K ∈ P) : Kᶜ
 theorem deterministic_time_subset_space (t : ℕ → ℕ) : DTIME t ⊆ DSPACE t :=
   Complexity.DTIME_subset_DSPACE t
 
-/-- Savitch, in exactly the polynomial-space form needed by Theorem 6.1. -/
+/-- Savitch in the polynomial-space form used by the historical generation
+characterisation. -/
 theorem savitch : NPSPACE ⊆ PSPACE := Complexity.NPSPACE_subset_PSPACE
 
 theorem pspace_eq_npspace : PSPACE = NPSPACE := Complexity.PSPACE_eq_NPSPACE
@@ -44,7 +45,7 @@ theorem sat_mem_np : SAT ∈ NP := cook_levin.1
 theorem unsat_co_np_complete : coNPComplete UNSAT :=
   Complexity.SAT.coNPComplete_compl_language
 
-/-- The collapse used in the complement clause of Theorem 7.2. -/
+/-- The NP/coNP collapse used in complement nonclosure arguments. -/
 theorem unsat_mem_np_iff : UNSAT ∈ NP ↔ NP = coNP := by
   change SAT ∈ coNP ↔ NP = coNP
   exact Complexity.SAT.language_mem_coNP_iff_NP_eq_coNP

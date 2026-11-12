@@ -1,26 +1,25 @@
 import ComplexityOfGenerators.ComplexityClasses
 
 /-!
-# Certificate schemes (Definitions 7.2–7.6)
+# Retained binary certificate schemes
 
-Certificates are binary strings. This is an explicit encoding choice; changing
-between fixed finite alphabets with at least two symbols has constant-factor cost.
-The two read-only input tapes represent the paper's separator-encoded `w#c`.
+This file keeps the historical interface: certificates are positive binary
+strings, and sampler and recoverer costs use finite-trial budgets. Empty
+instance words are allowed. Every sampled certificate certifies an instance
+of the requested length, ensuring a nonempty recovery target.
 
-Two corrections are authorised by the user: certified instances may be empty
-words, and every sampled certificate must certify an instance of the requested
-length. Certificates themselves remain positive strings. The latter requirement
-ensures that composing sampler and recoverer never selects an empty recovery
-language. `LiteralCertificateCoverage` records the original coverage condition
-separately, so its empty-word counterexample does not concern the corrected scheme.
+The current paper's Definition 6.1 is formalised in `PaperCertificates`:
+certificates use the instance alphabet, include the empty word, and the
+runtime premises constrain accepting runs only. The full current Proposition
+6.1 is proved in `Proofs.PaperCertificateEquivalence`.
 -/
 
 namespace ComplexityOfGenerators
 
 variable {α : Type} (L : Language α)
 
-/-- Definition 7.2, including soundness for *all* positive certificates, not only
-the bounded certificates used to witness completeness. -/
+/-- The retained verifier requires soundness for all positive binary
+certificates, including those beyond the completeness witness bound. -/
 structure PolynomialVerifier where
   machine : Machine α Bool Unit
   deterministic : machine.Deterministic
@@ -35,8 +34,8 @@ namespace PolynomialVerifier
 
 variable {L}
 
-/-- Definition 7.3 with the approved correction from `α⁺` to `α*` for instances.
-The certificate remains positive, as stipulated in Definition 7.2. -/
+/-- Certified inputs in the retained interface may be empty instance
+words; the certificate itself must be a positive binary word. -/
 def certifiedInputs (V : PolynomialVerifier L) (c : BitString) : Language α :=
   { w | c ≠ [] ∧ V.machine.Accepts (verifierData w c) [] }
 
@@ -68,10 +67,9 @@ instance : CoeFun BivariatePolynomialBound (fun _ => ℕ → ℕ → ℕ) :=
 
 variable {L}
 
-/-- Definition 7.4. The sampler's outputs are certificates, so their length is
-not forced to equal the index. Coverage is restricted to length-`n` instances.
-`certifiesInstance` is the approved additional condition: every sampled
-certificate certifies at least one instance of that length. -/
+/-- The retained sampler emits certificates whose lengths can differ
+from the index. Coverage is over length-`n` instances, and every emitted
+certificate certifies at least one such instance. Costs use trial budgets. -/
 structure CertificateGenerator (V : PolynomialVerifier L) where
   sampler : UniformGenerators Bool
   polynomialTime : sampler.PolynomialTime
@@ -82,9 +80,9 @@ structure CertificateGenerator (V : PolynomialVerifier L) where
   rejectsEmpty : ∀ n, lengthSlice L n = ∅ →
     ∀ b, ¬ sampler.machine.Accepts (generatorData n) b
 
-/-- Definition 7.5. One machine handles all `(n,c)`; its time bound is polynomial
-in both parameters. The recovery condition holds for every positive certificate,
-including certificates which certify no instance of the requested length. -/
+/-- The retained recoverer handles all `(n,c)` with positive binary `c`,
+including empty recovery targets. Seed and execution budgets are polynomial
+in the index and certificate length. -/
 structure CertificateRecoverer (V : PolynomialVerifier L) where
   machine : Machine Unit Bool α
   seed : BivariatePolynomialBound
@@ -95,12 +93,14 @@ structure CertificateRecoverer (V : PolynomialVerifier L) where
   timeBound : ∀ n c, c ≠ [] →
     machine.GeneratorTimeBound (generatorData n c) (seed n c.length) (time n c.length)
 
-/-- Definition 7.6: existence of both components for the *same* verifier. -/
+/-- A certificate scheme in the retained interface consists of sampler
+and recoverer components for the same verifier. -/
 def HasCertificateScheme (V : PolynomialVerifier L) : Prop :=
   Nonempty (CertificateGenerator V) ∧ Nonempty (CertificateRecoverer V)
 
-/-- The original, uncorrected coverage clause only. It is kept for documenting
-the source counterexample, and is not a condition of `HasCertificateScheme`. -/
+/-- An earlier coverage clause additionally excluded empty instance words.
+It is retained to state its empty-word obstruction and is not a condition of
+`HasCertificateScheme`. -/
 def LiteralCertificateCoverage (V : PolynomialVerifier L) : Prop :=
   ∃ sampler : UniformGenerators Bool, ∀ n, lengthSlice L n =
     {w | w.length = n ∧ ∃ c, c ∈ sampler.layer n ∧ w ≠ [] ∧ w ∈ V.certifiedInputs c}
@@ -114,7 +114,8 @@ theorem literal_certificate_coverage_excludes_empty_word (V : PolynomialVerifier
   obtain ⟨_, c, _, certified⟩ := member
   exact certified.1 rfl
 
-/-- The new sampler condition entails positivity of every emitted certificate. -/
+/-- The sampler's nonempty-recovery condition makes every emitted
+certificate positive in the retained binary interface. -/
 theorem CertificateGenerator.certificate_nonempty {V : PolynomialVerifier L}
     (S : CertificateGenerator V) (n : ℕ) (c : BitString) (sampled : c ∈ S.sampler.layer n) :
     c ≠ [] := by
@@ -162,8 +163,8 @@ theorem CertificateRecoverer.sampled_language_nonempty {V : PolynomialVerifier L
   rw [R.recovers n c (S.certificate_nonempty n c sampled)]
   exact S.certifiesInstance n c sampled
 
-/-- The operational benefit of the new condition: every full-budget recovery
-trial accepts when supplied with a sampled certificate. -/
+/-- A full recovery trial accepts for every certificate emitted by this
+sampler, since each such certificate has a nonempty recovery target. -/
 theorem CertificateRecoverer.sampled_trial_accepts {V : PolynomialVerifier L}
     (R : CertificateRecoverer V) (S : CertificateGenerator V) (n : ℕ) (c : BitString)
     (sampled : c ∈ S.sampler.layer n) (bits : BitString)

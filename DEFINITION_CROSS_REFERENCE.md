@@ -1,9 +1,11 @@
 # Current paper definitions and Lean implementations
 
-This guide follows the current PLDI27 source, as examined on 12 November 2026.
-The bundled PDF is an older manuscript. See [result status](CURRENT_PAPER_STATUS.md)
-for theorem coverage; the existence of a definition does not mean all results
-about it have been formalised.
+This guide follows the current PLDI27 [paper](paper.pdf), as examined on
+12 November 2026. Numbered citations refer to this version unless explicitly
+labelled historical.
+The current theorem entry points are in
+[MainTheorems.lean](ComplexityOfGenerators/MainTheorems.lean), with build and
+inspection instructions in [ARTIFACT_README.md](ARTIFACT_README.md).
 
 | Paper object | Lean implementation | Convention or limitation |
 | --- | --- | --- |
@@ -29,9 +31,10 @@ about it have been formalised.
 | ELEPG | `ELEPG`, `GlobalWordPolynomialTime` | Raw moment conditions, infinitely many active indices, and for every generated word a polynomial-in-word-length fast accepting run at some index. `bounded_paths` derives a polynomial index bound by unary-index locality |
 | Historical layer-fast variant | `LayerFastELEPG`, `PolynomialIndexCoverage` | Stronger family requirements retained under a distinct name: fast runs for every word in every layer plus polynomial producing-index coverage |
 | Collision resistance | [Cryptography](ComplexityOfGenerators/Cryptography.lean) and [foundations](ComplexityOfGenerators/Foundations/Cryptography.lean) | Uniform unkeyed hash family; native polynomial attackers; verified agreement with the corresponding VCVio security quantifiers |
-| Collision language | `HashFunction.binaryCollisionLanguage` | Fixed injective two-bit-block encoding of bits/separator. Parameter `n` gives encoded length `4*(n+1)+2`, rather than the paper's ternary length `2*n+3` |
-| Polynomial certificate schemes | [Certificates](ComplexityOfGenerators/Certificates.lean) | Native verifier/sampler/recoverer. Historical positive binary certificates remain; paper now permits empty certificates and uses its own alphabet. An explicit convention-equivalence bridge is still needed |
-| Self reduction / exact recursion | [SelfReducibility](ComplexityOfGenerators/SelfReducibility.lean) | Concrete native computational hypotheses. Inverse labels are still accepted at all lengths; the proof enumerates a logarithmic range. Restriction to the paper's explicit bounded-label interface remains an API alignment obligation |
+| Collision language | `HashFunction.collisionLanguage : Language PairSymbol` | The paper's literal `x#y` encoding over bits and a separator, of length `2*n+3`. Current Theorem 5.2, its corollary and the polynomial-decision observation use this language; the binary encoding is an internal proved simulation tool |
+| Polynomial certificate schemes | [PaperCertificates](ComplexityOfGenerators/PaperCertificates.lean), [equivalence](ComplexityOfGenerators/Proofs/PaperCertificateEquivalence.lean) | Current same-alphabet certificates `Word α`, including `[]`; soundness, completeness and recovery for all certificates; sampler/recoverer bounds constrain accepting runs only. The equivalence holds for every finite alphabet, including unary and empty alphabets |
+| Self reduction / exact recursion | [PaperSelfReducibility](ComplexityOfGenerators/PaperSelfReducibility.lean), [generation](ComplexityOfGenerators/Proofs/PaperExactRecursiveGeneration.lean) | Current inverse premises apply only to labels of length at most the supplied logarithmic bound. Base and inverse generators have accepting-run bounds. Bounded simulation and a native width/length postfilter derive the stronger internal trial interface |
+| Historical certificate and recursive interfaces | [Certificates](ComplexityOfGenerators/Certificates.lean), [SelfReducibility](ComplexityOfGenerators/SelfReducibility.lean) | Retained legacy interfaces: positive binary certificates, all-label inverse obligations and finite-trial budgets. These are not the current public hypotheses; proved normalization bridges connect the constructions |
 | SAT construction | [SAT](ComplexityOfGenerators/Examples/SAT.lean), [inversion](ComplexityOfGenerators/Examples/SATInversion.lean) | Concrete padded syntax, substitution, certificates, inverse choices and fibre laws; native polynomial self-reduction, full-support base/inverse machines, `PaddedCNF.exactlyRecursivelyGenerable`, and `PaddedCNF.language_mem_pg` checked. On malformed words, Lean retains the parsed header rank, while the paper assigns rank/width zero; valid encodings and the self-reduction laws agree |
 | HAMPATH construction | [HAMPATH](ComplexityOfGenerators/Examples/HAMPATH.lean), [paths](ComplexityOfGenerators/Examples/HAMPATHPaths.lean), [inversion](ComplexityOfGenerators/Examples/HAMPATHInversion.lean), [native machines](ComplexityOfGenerators/Examples/HAMPATHNative.lean) | Concrete matrix codec, order-preserving vertex insertion/deletion, path laws, ranks and inverse fibres; native polynomial self-reduction, full-support base/inverse machines, `HAMPATH.exactlyRecursivelyGenerable`, and `HAMPATH.language_mem_pg` checked |
 
@@ -65,3 +68,28 @@ specialisations and concrete SAT/HAMPATH constructions. `HistoricalTheorems.lean
 retains older theorem names and numbering, including certificate-scheme
 equivalence under the positive binary certificate convention. The root package
 imports both; importing `MainTheorems` alone supplies the current API.
+
+## Runtime and alphabet bridges
+
+[RandomMeter](ComplexityOfGenerators/Proofs/RandomMeter.lean) provides a concrete
+native conversion for arbitrary `InputData`, preserving the generated language
+while turning accepting-run bounds of a generator into finite-trial budgets.
+It handles ordinary and auxiliary inputs, including empty target languages.
+The current exact-recursive proof also checks the candidate's length and
+computed label width after a bounded inverse call. A retained candidate forces
+the label into the promised domain; inverse behaviour outside that domain is
+unconstrained.
+
+[PairCollisionNonGenerability](ComplexityOfGenerators/Proofs/PairCollisionNonGenerability.lean)
+proves the raw obstruction for the literal separated-pair language. A concrete
+native two-bit output encoder doubles expected lengths, and the first-moment
+argument is proved with those doubled means at the same physical indices.
+[PairCollisionDecision](ComplexityOfGenerators/Proofs/PairCollisionDecision.lean)
+provides the literal language's native polynomial decider.
+
+The current nonclosure theorems range over any finite alphabet with at least two
+symbols, expressed by `[Nontrivial α]`, following the paper's alphabet convention.
+Native symbol maps transport the infinite-intersection witnesses. Complement
+nonclosure is proved using actual finite-alphabet fallback generators under
+`NP α ≠ coNP α`; no alphabet-invariance axiom is assumed. The size convention is
+necessary: over the empty alphabet, PG is intersection-closed.

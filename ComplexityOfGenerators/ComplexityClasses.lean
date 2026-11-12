@@ -6,12 +6,14 @@ import ComplexityOfGenerators.Generators
 `PolynomialBound` uses `c * (n + 1)^k`. These bounds are cofinal among polynomial
 upper bounds, absorb multiplicative constants, and make sense at size zero.
 
-For generators, `RunsInTime` follows **Remark 1** with separate random-tape and
-execution budgets. A full trial accepts exactly when the slice is nonempty,
-and otherwise rejects by exhaustion. Both budgets are uniform polynomials in
-`PolynomialTime`. Keeping them separate permits setup and simulation overhead
-without supplying extra random bits that must also be consumed. Decision
-machines use the ordinary worst-case `Machine.TimeBound` instead.
+The internal `RunsInTime` interface retains separate random-tape and execution
+budgets. A full trial accepts exactly when the slice is nonempty, and otherwise
+rejects by exhaustion. Both budgets are uniform polynomials in `PolynomialTime`.
+This historical finite-trial interface differs from the current paper's bounds
+on accepting runs; `Proofs.AcceptingTimeGeneration` proves that the resulting
+PG class is the same. Keeping the budgets separate permits setup and simulation
+overhead without supplying extra random bits that must also be consumed.
+Decision machines use the ordinary worst-case `Machine.TimeBound` instead.
 -/
 
 namespace ComplexityOfGenerators
@@ -26,7 +28,7 @@ def PolynomialBound.eval (p : PolynomialBound) (n : ℕ) : ℕ :=
 
 instance : CoeFun PolynomialBound (fun _ => ℕ → ℕ) := ⟨PolynomialBound.eval⟩
 
-/-- Remark 1 trials with distinct seed and primitive-transition budgets. -/
+/-- Internal finite trials with distinct seed and primitive-transition budgets. -/
 def Machine.GeneratorTimeBound {I A O : Type} (M : Machine I A O)
     (data : InputData I A) (seedBudget timeBudget : ℕ) : Prop :=
   (∀ b, b.length ≤ seedBudget → M.HaltsWithin data b timeBudget) ∧
@@ -35,7 +37,7 @@ def Machine.GeneratorTimeBound {I A O : Type} (M : Machine I A O)
 /-- Short name used in the trial-budget lemmas. -/
 abbrev Machine.TrialBound {I A O : Type} (M : Machine I A O) := M.GeneratorTimeBound
 
-/-- The emptiness test asserted in Remark 1, proved from the budget convention
+/-- The full-trial emptiness test, proved from the internal budget convention
 and the operational distinction between explicit rejection and exhaustion. -/
 theorem bounded_trial_exhausted_iff_empty {I A O : Type} (M : Machine I A O)
     (data : InputData I A) (seed t : ℕ) (b : BitString)
@@ -66,17 +68,19 @@ namespace UniformGenerators
 
 variable {α : Type} [Fintype α]
 
-/-- Definition 4.3 with the empty-slice convention of Remark 1.
-This also explicitly rules out accepting only a proper subset of full-budget seeds. -/
+/-- Historical finite-trial time bounds for a uniform generator family.
+Full-budget seeds all accept on a nonempty slice and all exhaust on an empty one. -/
 def RunsInTime (G : UniformGenerators α) (seed time : ℕ → ℕ) : Prop :=
   ∀ n, G.machine.GeneratorTimeBound (generatorData n) (seed n) (time n)
 
-/-- Definition 5.1 with the approved Remark 1 interpretation: uniform polynomial
-seed and execution budgets for the whole family. -/
+/-- Uniform polynomial seed and execution budgets for the whole family.
+This internal interface characterises the accepting-time PG class of
+Definitions 5.1–5.2 by `mem_pg_iff_accepting_polynomial_time`. -/
 def PolynomialTime (G : UniformGenerators α) : Prop :=
   ∃ seed time : PolynomialBound, G.RunsInTime seed time
 
-/-- Definition 4.4: work space only; output and random tapes are not counted. -/
+/-- The space-bound convention of Section 4: work space only; output and random
+tapes are not counted. -/
 def RunsInSpace (G : UniformGenerators α) (s : ℕ → ℕ) : Prop :=
   ∀ n, G.machine.SpaceBound (generatorData n) (s n)
 
@@ -87,7 +91,8 @@ end UniformGenerators
 
 variable (α : Type) [Fintype α]
 
-/-- Definition 3.3: a deterministic Turing recogniser may diverge off the language. -/
+/-- Recursive enumerability, as used in Section 3: a deterministic Turing
+recogniser may diverge off the language. -/
 def RE : LanguageClass α :=
   { L | ∃ M : Machine α Bool Unit, M.Deterministic ∧
       ∀ w, M.Accepts (decisionData w) [] ↔ w ∈ L }
@@ -128,19 +133,22 @@ def GTIME (t : ℕ → ℕ) : LanguageClass α :=
       ∀ n bits word, G.machine.Produces (generatorData n) bits word →
         G.machine.run (generatorData n) bits (t n) = .halted (.accepted word) }
 
-/-- Definition 4.4: exact-length, uniform, space-bounded generation. This extends
+/-- The exact-length, uniform, space-bounded class introduced in Section 4. This extends
 the paper's domain of space-constructible bounds to arbitrary `s`;
 constructibility is not encoded. -/
 def GSPACE (s : ℕ → ℕ) : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
       G.toUniformGenerators.language = L ∧ G.toUniformGenerators.RunsInSpace s }
 
-/-- Definition 5.2: polynomial-time generable languages. -/
+/-- Definition 5.2: polynomial-time exact generability, using the internal
+finite-trial interface. `mem_pg_iff_accepting_polynomial_time` proves equivalence
+with the paper's accepting-time convention. -/
 def PG : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
       G.toUniformGenerators.language = L ∧ G.toUniformGenerators.PolynomialTime }
 
-/-- Definition 6.2: polynomial-space generable languages. -/
+/-- The retained polynomial-space exact-generation class. Its historical
+PSPACE characterisation is exposed in `HistoricalTheorems`. -/
 def PSPACEG : LanguageClass α :=
   { L | ∃ G : GeneratorFamily α,
       G.toUniformGenerators.language = L ∧ G.toUniformGenerators.PolynomialSpace }

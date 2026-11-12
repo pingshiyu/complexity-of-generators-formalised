@@ -1,13 +1,19 @@
 import ComplexityOfGenerators.SelfReducibility
 
-/-! Certificate decomposition, iterated reductions, and ancestor sets from
-Appendix A.23. These arguments use Mathlib's reflexive transitive closure. -/
+/-!
+# Certificate decomposition and ancestors for Definitions 6.2 and 6.3
+
+These arguments establish the iterated-reduction and ancestor properties used
+by the current Proposition 6.2. Paths are represented by Mathlib's reflexive
+transitive closure.
+-/
 
 namespace ComplexityOfGenerators.SelfReduction
 
 variable {α : Type} {L : Language α} (R : SelfReduction L)
 
-/-- Lemma A.23.1, including the zero-width case. -/
+/-- A valid one-step certificate prefix preserves language membership,
+including in the zero-width case. -/
 theorem mem_of_reduce_mem {x w : Word α} (length : w.length = R.width x)
     (member : R.reduce x w ∈ L) : x ∈ L := by
   obtain ⟨c, certified⟩ := (R.certifies _).mp member
@@ -42,9 +48,8 @@ theorem path_mem {x y : Word α} (path : R.Path x y) (member : y ∈ L) : x ∈ 
   | refl => exact member
   | tail _ step ih => exact ih (R.step_mem step member)
 
-/-- Every member of positive certificate length has a genuine reduction to
-another member. The hypothesis `x ∈ L`, omitted from the printed statement of
-Lemma A.23.2 but used in its proof, is essential. -/
+/-- Every member of positive certificate length reduces to another member.
+Membership supplies a valid certificate and hence a permitted first prefix. -/
 theorem exists_step {x : Word α} (member : x ∈ L) (positive : 0 < R.rank x) :
     ∃ y ∈ L, R.Step x y := by
   obtain ⟨c, certified⟩ := (R.certifies x).mp member
@@ -52,8 +57,8 @@ theorem exists_step {x : Word α} (member : x ∈ L) (positive : 0 < R.rank x) :
   exact ⟨R.reduce x w, (R.certifies _).mpr ⟨d, tail⟩,
     w, (R.positive x).mp positive, length, rfl⟩
 
-/-- Lemma A.23.2: a member reduces to a zero-certificate member. This also
-covers the already-zero case by the reflexive path. -/
+/-- Every member reduces to a zero-certificate member. The construction
+also handles a member that already has certificate rank zero. -/
 theorem exists_base_path {x : Word α} (member : x ∈ L) :
     ∃ y ∈ L, R.rank y = 0 ∧ R.Path x y := by
   generalize h : R.rank x = k
@@ -120,8 +125,8 @@ theorem path_eq_or_iterated {x y : Word α} (path : R.Path x y) :
     · exact Or.inr ⟨w ++ v, by simp [nonempty],
         R.iterated_append tail (.single _ _ length) nonempty⟩
 
-/-- The path formulation exactly matches Definition A.23.4; it does not add
-ancestors reached only by empty labels. -/
+/-- The path formulation agrees with the ancestor set of current
+Definition 6.3, including the length-`n` starting words. -/
 theorem mem_ancestors_iff {n : ℕ} {y : Word α} :
     y ∈ R.ancestors n ↔ y ∈ L ∧ ∃ x ∈ lengthSlice L n, R.Path x y := by
   constructor
@@ -134,7 +139,7 @@ theorem mem_ancestors_iff {n : ℕ} {y : Word α} :
     · exact Or.inl xm.2
     · exact Or.inr ⟨x, xm, w, wn, path⟩
 
-/-- Lemma A.23.3. -/
+/-- Ancestor representations are no longer than the target length. -/
 theorem ancestor_length_le {n : ℕ} {y : Word α} (member : y ∈ R.ancestors n) :
     y.length ≤ n := by
   obtain ⟨_, x, xm, path⟩ := R.mem_ancestors_iff.mp member

@@ -7,11 +7,12 @@ import ComplexityOfGenerators.Proofs.PolynomialSpaceBase
 /-!
 # Historical theorem API
 
-These aliases retain the numbering and entry points of the older bundled
+These aliases retain the numbering and entry points of the older
 manuscript. Current PLDI27 results are collected in `MainTheorems`; the numbers
 below refer to the historical manuscript. The certificate-scheme equivalence
-uses the retained positive binary certificate convention, whose relation to
-the current paper is documented in `DEFINITION_CROSS_REFERENCE.md`.
+uses the retained positive binary certificate convention. The current
+same-alphabet statement, including empty certificates, is proved in
+`Proofs.PaperCertificateEquivalence` and exposed in `MainTheorems`.
 
 Import this module for the historical API, or the root package for both APIs.
 -/
@@ -28,8 +29,8 @@ theorem theorem_5_1_cryptographic_separation
   corollary_collision_resistance_separates_polynomial_generation h
 
 /-- **Historical Theorem 6.1.** “PSPACEG = PSPACE.”
-This theorem is unrelativised, exactly as stated. Oracle equality is Proposition
-6.5, not another main theorem; no oracle or cryptographic assumption is added. -/
+This retained space characterisation is unrelativised; it has no oracle or
+cryptographic assumption. Current Theorem 6.1 instead concerns nonclosure. -/
 theorem theorem_6_1_polynomial_space_generation
     (α : Type) [Fintype α] : PSPACEG α = PSPACE α := by
   apply Set.Subset.antisymm
@@ -38,8 +39,9 @@ theorem theorem_6_1_polynomial_space_generation
 
 /-- Historical Theorem 7.1: polynomial exact generators are certificate
 schemes under the retained positive binary certificate convention. Empty
-instances are allowed. The bridge to the current paper's certificate alphabet
-and empty certificates is recorded in `DEFINITION_CROSS_REFERENCE.md`. -/
+instances are allowed. For current Proposition 6.1, with same-alphabet and
+empty certificates, see `proposition_6_1_generators_are_certificate_schemes`
+in `MainTheorems`. -/
 theorem theorem_7_1_generators_are_certificate_schemes
     {α : Type} [Fintype α] (L : Language α) :
     L ∈ PG α ↔ ∃ V : PolynomialVerifier L, HasCertificateScheme V := by
@@ -58,15 +60,18 @@ theorem theorem_7_2_efficient_generators_are_not_composable :
     (CollisionResistantHashFunctionsExist → ¬ ClosedUnderIntersection (PG Bool)) :=
   ⟨pg_not_complement_closed, pg_not_intersection_closed⟩
 
-/-- **Historical Proposition A.23.2 (current Proposition 6.2).**
-If `L` is exactly recursively generable, then `L ∈ PG`.
-The construction uses the corrected optional stopping rule for reductions
+/-- **Historical Proposition A.23.2 (internal form of current Proposition 6.2).**
+This alias retains all-label inverse obligations and finite-trial bounds.
+The current bounded-label, accepting-time statement is
+`proposition_6_2_exact_recursive_generation` in `MainTheorems`.
+If `L` satisfies the retained exact-recursive interface, then `L ∈ PG`.
+The construction uses the optional stopping rule for reductions
 that preserve word length. Its finite native machine and polynomial running
 time are proved, including empty slices and the empty alphabet. -/
 theorem proposition_a23_2_exact_recursive_generation
     {α : Type} [Fintype α] (L : Language α)
     (h : ExactlyRecursivelyGenerable L) : L ∈ PG α :=
-  proposition_6_2_exact_recursive_generation h
+  exactlyRecursivelyGenerable_mem_pg h
 
 /-- Expected-length extension of collision non-generability, using the same
 native machine model and unkeyed uniform collision-resistance assumption.
@@ -74,7 +79,7 @@ No variance or concentration hypothesis is imposed. -/
 theorem theorem_expected_length_collision_non_generability
     (h : HashFunction) (secure : h.CollisionResistant) :
     h.binaryCollisionLanguage ∉ ELEPG Bool :=
-  theorem_5_2_collision_non_generability h secure
+  h.binaryCollisionLanguage_not_mem_elepg secure
 
 /-- ELEPG generators are not closed under intersection if collision-resistant
 hashes exist. The reduction constructs an actual polynomial-time attacker. -/

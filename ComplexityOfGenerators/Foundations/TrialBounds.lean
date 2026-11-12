@@ -3,7 +3,7 @@ import ComplexityOfGenerators.Proofs.NonemptyTrialBounds
 /-!
 # Separate seed and execution budgets
 
-This repair of the Remark 1 convention keeps exhaustion as the only
+The historical finite-trial interface keeps exhaustion as the only
 permitted rejection and keeps the full-trial emptiness test. It separates the
 number of supplied random bits from the number of primitive transitions, so
 that ordinary simulation overhead can be charged without lengthening the tape.
@@ -28,8 +28,8 @@ theorem trialBound_budget_witness (data : InputData I A) (seed time : ℕ)
       bits.length = seed ∧ M.run data bits time = .halted (.accepted word) :=
   M.generatedLanguage_iff_budget_seed data seed time positive bound word
 
-/-- The separation preserves exactly the emptiness observation from
-Remark 1: a full trial exhausts iff the generated slice is empty. -/
+/-- The separate budgets preserve the full-trial emptiness test:
+a full trial exhausts iff the generated slice is empty. -/
 theorem trialBound_exhausted_iff_empty (data : InputData I A) (seed time : ℕ)
     (generator : M.IsGenerator data) (bound : M.TrialBound data seed time)
     (bits : BitString) (length : bits.length = seed) :

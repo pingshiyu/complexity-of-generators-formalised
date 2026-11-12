@@ -8,7 +8,7 @@ import ComplexityOfGenerators.Proofs.NonemptyTrialBounds
 A bounded sampler and bounded genuine recoverers yield a genuine generator.
 On every sufficiently long finite tape, a nonempty sampling language leaves
 enough randomness for recovery. Empty sampling languages drain to exhaustion.
-These facts establish almost-sure productivity and the Remark 1 trial bounds
+These facts establish almost-sure productivity and the internal finite-trial bounds
 without assuming independence of a sampler-selected stopping offset.
 -/
 

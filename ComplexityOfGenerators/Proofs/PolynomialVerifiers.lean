@@ -6,11 +6,15 @@ import ComplexityOfGenerators.Proofs.NonemptyTrialBounds
 /-!
 # Polynomial verifiers in the native machine model
 
-Every native NP machine yields a deterministic polynomial verifier. Its
-certificate is a positive choice tape of length at most the source time bound
-plus one. The verifier compiler reads that tape with one native step per source
-step. This establishes the verifier-existence part of Theorem 7.1 for `PG`,
-without assuming a correspondence with a different computational model.
+Every native NP machine yields a deterministic polynomial verifier whose
+certificate is a positive binary choice tape of length at most the source
+time bound plus one. The verifier compiler reads that tape with one native
+step per source step, without assuming a correspondence with another model.
+
+The verifier and recovery lemmas here use the retained binary-positive,
+finite-trial certificate interface. The current Definition 6.1 and full
+Proposition 6.1 are given by `PaperCertificates` and
+`Proofs.PaperCertificateEquivalence`.
 -/
 
 namespace ComplexityOfGenerators
@@ -44,8 +48,8 @@ theorem accepts_short_positive_tape (data : InputData I A) (t : ℕ)
 
 end Machine
 
-/-- Native NP recognition supplies exactly the positive, polynomially bounded
-certificates required by Definition 7.2, including for the empty input word. -/
+/-- Native NP recognition provides the positive, polynomially bounded
+binary certificates of the retained verifier interface, even for empty input. -/
 theorem np_has_polynomialVerifier {α : Type} [Fintype α] {L : Language α} (member : L ∈ NP α) :
     Nonempty (PolynomialVerifier L) := by
   obtain ⟨M, p, time, language⟩ := member
@@ -75,8 +79,8 @@ theorem pg_has_polynomialVerifier {α : Type} [Fintype α] {L : Language α} (me
     Nonempty (PolynomialVerifier L) :=
   np_has_polynomialVerifier (pg_subset_np member)
 
-/-- The corrected sampler condition gives an ordinary worst-case time bound
-for each recovery call, even on tapes longer than its seed budget. -/
+/-- The sampler's nonempty-recovery condition gives a worst-case time
+bound for each selected recovery call, including on long random tapes. -/
 theorem CertificateRecoverer.sampled_timeBound {α : Type} {L : Language α}
     {V : PolynomialVerifier L} (R : CertificateRecoverer V) (S : CertificateGenerator V)
     (n : ℕ) (c : BitString) (sampled : c ∈ S.sampler.layer n) :
@@ -98,10 +102,9 @@ theorem CertificateGenerator.output_length_le {α : Type} {L : Language α}
   have accepted := S.sampler.machine.produces_at_bound _ bits (time n) c (allTapes bits) produces
   exact S.sampler.machine.accepted_output_length_le _ bits (time n) c accepted
 
-/-- On all sampler outputs, the recovery bound in `(n, |c|)` is bounded by one
-polynomial in `n`. Together with `sampled_union_eq`, this discharges the semantic
-and resource calculations used with the native sequential-composition compiler
-in `CertificateSchemeGeneration` to prove the reverse implication of Theorem 7.1. -/
+/-- On sampler outputs, the bivariate recovery bound is dominated by one
+polynomial in `n`. This is used with native sequential composition in
+`CertificateSchemeGeneration` for the retained binary, finite-trial interface. -/
 theorem CertificateRecoverer.sampled_polynomial_time {α : Type} {L : Language α}
     {V : PolynomialVerifier L} (R : CertificateRecoverer V) (S : CertificateGenerator V) :
     ∃ p : PolynomialBound, ∀ n c, c ∈ S.sampler.layer n →

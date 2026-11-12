@@ -36,7 +36,7 @@ theorem HashFunction.collision_exists (h : HashFunction) (n : ℕ) :
   obtain ⟨a, b, same, different⟩ := notInjective
   exact ⟨a, b, different, same⟩
 
-/-- Corrected, typed Definition 5.5: preimages of `h_n` have length `n+1`.
+/-- Definition 5.10: preimages of `h_n` have length `n+1`.
 Pair serialization is explicit and independent of its security parameter. -/
 def HashFunction.collisionLanguage (h : HashFunction) : Language PairSymbol :=
   { w | ∃ n x y, h.IsCollision n x y ∧ w = encodePair x y }
@@ -130,7 +130,7 @@ theorem encodePair_injective :
     Function.Injective (fun p : BitString × BitString => encodePair p.1 p.2) :=
   collisionPairEncoding.encode_injective
 
-/-- Exact inverse-polynomial formulation corresponding to Definition 5.4. -/
+/-- Exact inverse-polynomial formulation corresponding to Definition 5.9. -/
 def InversePolynomialNegligible (f : ℕ → ℝ≥0∞) : Prop :=
   ∀ q : PolynomialBound, ∀ᶠ n in atTop, f n ≤ (q n : ℝ≥0∞)⁻¹
 
@@ -188,7 +188,7 @@ polynomial-time machine, so the efficient adversary predicate is `True`. -/
 noncomputable def collisionGame (h : HashFunction) : SecurityGame CollisionFinder where
   advantage := fun A n => fairCoinMeasure (collisionSuccess h A n)
 
-/-- The exact collision-resistance assumption used in Theorems 5.1 and 7.2,
+/-- The exact collision-resistance assumption used in Theorems 5.2 and 6.1,
 expressed as a VCVio security game over uniform polynomial-time finders. -/
 theorem HashFunction.collisionResistant_iff_vcvio (h : HashFunction) :
     h.CollisionResistant ↔ (collisionGame h).secureAgainst (fun _ => True) := by

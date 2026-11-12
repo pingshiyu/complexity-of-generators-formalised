@@ -2,9 +2,10 @@ import ComplexityOfGenerators.Simulation.CyclicGenerator.Generation
 import ComplexityOfGenerators.Proofs.EmptyWordGeneration
 import ComplexityOfGenerators.Foundations.StationarySpace
 
-/-! The reverse inclusion in Theorem 6.1, following Appendix A.17: enumerate
-words, run the space-bounded decider, and repeatedly offer accepted words with
-probability one half. The concrete compiler's visited-cell bound is used here. -/
+/-! The reverse inclusion in the historical `PSPACEG = PSPACE`
+characterisation: enumerate words, run the space-bounded decider, and repeatedly
+offer accepted words with probability one half. The concrete compiler's
+visited-cell bound is used here. -/
 
 namespace ComplexityOfGenerators
 
@@ -98,9 +99,9 @@ theorem pspace_subset_pspaceg_of_nonempty [Nonempty α] : PSPACE α ⊆ PSPACEG 
     simpa [generatorSpace, polynomial, radius, PolynomialBound.asPolynomial_eval,
       Nat.mul_add, ← Nat.mul_assoc, Nat.add_assoc] using majorant
 
-/-- Appendix A.17, reverse direction, for every finite alphabet. The empty
-alphabet has only the empty word and is handled by the existing elementary
-generators, which use one work cell. -/
+/-- The historical polynomial-space generation construction for every finite
+alphabet. The empty alphabet has only the empty word and is handled by the
+existing elementary generators, which use one work cell. -/
 theorem pspace_subset_pspaceg : PSPACE α ⊆ PSPACEG α := by
   classical
   by_cases inhabited : Nonempty α

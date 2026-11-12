@@ -5,7 +5,8 @@ import ComplexityOfGenerators.Foundations.ResourceBounds
 /-!
 # Finite witnesses for time-bounded generation
 
-The Remark 1 convention bounds trials on short tapes, not arbitrary tapes.
+The internal finite-trial convention bounds short random tapes; it does not
+directly bound runs on arbitrary tapes.
 To use it in a recognition proof, every generated word must still have a
 full-budget seed witness. This is proved here from read-once tape extension and
 unique halting outcomes, rather than assumed as an additional generation axiom.

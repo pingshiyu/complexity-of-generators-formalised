@@ -1,13 +1,17 @@
 import ComplexityOfGenerators.Proofs.ExactRecursiveAlgorithm
 
 /-!
-# Full finite-seed sampling for Proposition A.23.2
+# Full finite-seed sampling for Proposition 6.2
 
-This assembles the base trial and the corrected inverse walk. The resulting
-function has exactly the desired length-slice support, succeeds on every full
-seed for nonempty slices, and has a polynomial seed bound. The native machine
-implementation is a separate obligation: a function with these properties
-alone is not a proof of membership in `PG`.
+The base trial and optional inverse walk have exactly the target length-slice
+support, succeed on every full seed for a nonempty slice, and use a polynomial
+seed bound. Their native implementation is proved in
+`Simulation.ExactRecursive.Execution` and assembled in
+`Proofs.ExactRecursiveGeneration`.
+
+The sampler here consumes the retained finite-trial interface;
+`Proofs.PaperExactRecursiveGeneration` constructs that interface from the
+current Definition 6.3 before applying the controller.
 -/
 
 namespace ComplexityOfGenerators.ExactRecursiveGenerators

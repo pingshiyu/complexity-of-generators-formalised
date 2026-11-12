@@ -3,10 +3,11 @@ import ComplexityOfGenerators.Proofs.ResourceGeneration
 /-!
 # Polynomial-time generation is contained in NP
 
-The proof uses the paper's exact-length slices and the approved separate seed
-and execution bounds. The verifier is compiled into the original native machine
-model. A polynomial clock stops every branch, including long seeds on empty
-slices, while the full-budget seed lemma supplies accepting witnesses.
+The proof uses exact-length slices and a recognizer compiled into the native
+machine model. The internal family interface supplies separate seed and execution
+budgets; the accepting-time bridge relates these to the paper's bounds on
+accepting runs. A polynomial clock stops every recognizer branch, including
+long seeds on empty slices, and full-budget seeds supply accepting witnesses.
 -/
 
 namespace ComplexityOfGenerators
@@ -19,7 +20,7 @@ theorem generatorRecognizer_sound {α : Type} [Fintype α] (G : GeneratorFamily 
     ⟨bits, accepted⟩
   exact ⟨w.length, member⟩
 
-/-- The non-strict containment in Theorem 5.1, proved for every finite alphabet
+/-- The PG-to-NP containment, proved for every finite alphabet
 without any cryptographic assumption. -/
 theorem pg_subset_np {α : Type} [Fintype α] : PG α ⊆ NP α := by
   rintro L ⟨G, language, bounded⟩

@@ -2,16 +2,19 @@ import ComplexityOfGenerators.Foundations.ResourceBounds
 import Mathlib.Logic.Relation
 
 /-!
-# Self-reductions (Appendix A.23)
+# Self-reductions and the retained exact-recursive interface
 
-The certificate sets in this appendix contain the empty certificate, unlike
-`PolynomialVerifier` in Section 7. In particular, a zero certificate length
-does not mean that an instance is outside the language.
+`SelfReduction` and `PolynomialSelfReduction` formalise the semantic and
+native computational conditions of the current Definition 6.2. Certificate
+sets include the empty word, so zero certificate length does not imply that
+an instance is outside the language. The ancestor, base and inverse-fibre
+sets below are those used by the current Definition 6.3.
 
-`SelfReduction` records the semantic conditions of Definition A.23.1.
-Computational witnesses are separate: `PolynomialSelfReduction` requires
-actual deterministic native machines for the verifier and all three functions.
-Neither structure assumes a generator for the language.
+`ExactRecursiveGenerators` retains the stronger historical interface with
+all-label inverse calls and finite-trial budgets. `PaperSelfReducibility`
+provides the current bounded-label, accepting-time interface. The native
+normalisation in `Proofs.PaperExactRecursiveGeneration` proves their
+language-level equivalence and the current Proposition 6.2.
 -/
 
 namespace ComplexityOfGenerators
@@ -26,8 +29,8 @@ structure PolynomialWordFunction {I A O : Type} (f : Word I → Word A → Word 
     (time (x.length + y.length))
   computes : ∀ x y, machine.Produces { input := x, auxiliary := y } [] (f x y)
 
-/-- The certificate equation and size conditions in Definition A.23.1.
-`split` is the elementwise form of Equation (1), including at rank zero. -/
+/-- The certificate equation and size conditions of current Definition 6.2.
+`split` is the elementwise certificate decomposition, including at rank zero. -/
 structure SelfReduction {α : Type} (L : Language α) where
   certificates : Word α → Set (Word α)
   rank : Word α → ℕ
@@ -46,10 +49,9 @@ structure SelfReduction {α : Type} (L : Language α) where
   logConstant : ℕ
   width_le : ∀ x, width x ≤ logCoefficient * Nat.log 2 (x.length + 1) + logConstant
 
-/-- Computational clauses of Definition A.23.1. Unary outputs represent the
-natural-valued functions; their values are already polynomially bounded.
-The verifier decides membership in the entire certificate set, including `[]`.
-Its time bound also supplies item (2), the zero-certificate test. -/
+/-- Native computational clauses of current Definition 6.2. Unary outputs
+represent the polynomially bounded rank and width functions. The verifier
+decides the entire certificate set, including the zero-certificate test. -/
 structure PolynomialSelfReduction {α : Type} {L : Language α} (R : SelfReduction L) where
   verifier : Machine α α Unit
   verifier_deterministic : verifier.Deterministic
@@ -76,34 +78,35 @@ def Step (x y : Word α) : Prop :=
 /-- A finite sequence of positive-prefix reductions. -/
 abbrev Path := Relation.ReflTransGen R.Step
 
-/-- Definition A.23.2 as a graph of the partial iterated reduction. The second
-branch is used only when a nonempty suffix remains. This avoids defining a
-nonterminating Lean function at zero-width inputs. -/
+/-- The partial iterated reduction in current Definition 6.2. A recursive
+call requires a nonempty suffix, preventing a zero-width loop. -/
 inductive Iterated : Word α → Word α → Word α → Prop
   | single (x w) (length : w.length = R.width x) : Iterated x w (R.reduce x w)
   | more (x w rest y) (length : w.length = R.width x) (remaining : rest ≠ [])
       (tail : Iterated (R.reduce x w) rest y) : Iterated x (w ++ rest) y
 
-/-- Definition A.23.4, with the paper's nonempty iterated-reduction input.
-The path presentation is proved equivalent in `Proofs.SelfReduction`. -/
+/-- The ancestor set in current Definition 6.3, with a nonempty iterated
+reduction input. Its path presentation is proved in `Proofs.SelfReduction`. -/
 def ancestors (n : ℕ) : Language α :=
   {y | y ∈ L ∧ (y.length = n ∨
     ∃ x ∈ lengthSlice L n, ∃ w, w ≠ [] ∧ R.Iterated x w y)}
 
-/-- The initial sampling language in Definition A.23.5. -/
+/-- The base sampling language in current Definition 6.3. -/
 def bases (n : ℕ) : Language α := {y | y ∈ R.ancestors n ∧ R.rank y = 0}
 
-/-- The exact inverse fibre in Definition A.23.5. Empty labels are retained
-here, even though a terminating construction must avoid their zero-rank loops. -/
+/-- The inverse fibre in current Definition 6.3. Empty labels are included
+in the semantic set; terminating walks use positive-width reductions. -/
 def inverseFibre (n : ℕ) (y w : Word α) : Language α :=
   {x | x ∈ R.ancestors n ∧ R.reduce x w = y ∧ w.length = R.width x}
 
 end SelfReduction
 
-/-- Definition A.23.5, with a single native machine for all inverse parameters.
-The two word parameters occupy its ordinary and auxiliary input tapes; `n`
-uses the existing unary index tape. Bounds are uniform polynomials in `n`.
-As elsewhere in this repo, the empty-fibre case uses Remark 1 trial bounds. -/
+/-- The retained historical exact-recursive interface has one native
+inverse machine for all labels and polynomial finite-trial budgets in `n`.
+Ordinary and auxiliary tapes carry the two word parameters, and the unary
+index tape carries `n`. `PaperExactRecursiveGenerators` supplies the current
+bounded-label, accepting-time interface; `Proofs.PaperExactRecursiveGeneration`
+proves the native normalisation between them. -/
 structure ExactRecursiveGenerators {α : Type} [Fintype α] {L : Language α}
     (R : SelfReduction L) where
   base : UniformGenerators α
@@ -121,8 +124,11 @@ structure ExactRecursiveGenerators {α : Type} [Fintype α] {L : Language α}
     inverse.GeneratorTimeBound { input := y, auxiliary := w, index := n }
       (inverseSeed n) (inverseTime n)
 
-/-- Exact recursive generability, without adding a `PG` witness or an assumed
-compiler to the paper's hypotheses. -/
+/-- Exact recursive generability under the retained all-label,
+finite-trial interface. The current criterion is
+`PaperExactlyRecursivelyGenerable` in `PaperSelfReducibility`; their equivalence
+and the current Proposition 6.2 are proved in
+`Proofs.PaperExactRecursiveGeneration`. -/
 def ExactlyRecursivelyGenerable {α : Type} [Fintype α] (L : Language α) : Prop :=
   ∃ R : SelfReduction L, Nonempty (PolynomialSelfReduction R) ∧
     Nonempty (ExactRecursiveGenerators R)

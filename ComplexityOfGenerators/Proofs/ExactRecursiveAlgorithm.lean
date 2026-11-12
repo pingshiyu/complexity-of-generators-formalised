@@ -2,12 +2,16 @@ import ComplexityOfGenerators.Proofs.ExactRecursiveTrials
 import ComplexityOfGenerators.Proofs.BoundedTrialChoice
 
 /-!
-# The finite-seed algorithm for Proposition A.23.2
+# The finite-seed controller used for Proposition 6.2
 
-All inverse labels are tried on separate full seeds. Selection bits choose
-among successful trials, with a successful fallback if all offers are declined.
-The upward walk offers a stop at every length-`n` word, including intermediate
-ones, and continues only along nonempty labels.
+Inverse labels are tried on separate full seeds. Selection bits choose among
+successful trials, with a successful fallback if all offers are declined.
+The walk offers a stop at every length-`n` word, including intermediate ones,
+and continues only along nonempty labels, as in Appendix A.21.
+
+This controller consumes the retained finite-trial interface. Its native
+normalisation from the current Definition 6.3 is proved in
+`Proofs.PaperExactRecursiveGeneration`.
 -/
 
 namespace ComplexityOfGenerators.ExactRecursiveGenerators

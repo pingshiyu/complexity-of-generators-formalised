@@ -7,7 +7,8 @@ import ComplexityOfGenerators.Simulation.TransducerBank.Execution
 Every virtual head stays in a fixed interval. The compiler's physical scans
 visit that same interval, independently of execution time and the number of
 random bits. The theorem includes terminal successors and starts with the
-native blank work tape. This applies to both simulations in Theorem 6.1.
+native blank work tape. This supports both directions of the historical
+polynomial-space generation characterisation.
 -/
 
 namespace ComplexityOfGenerators.Simulation.TransducerBank

@@ -3,9 +3,15 @@ import ComplexityOfGenerators.Simulation.ExactRecursive.TableBridge
 import ComplexityOfGenerators.Proofs.EmptyWordGeneration
 import ComplexityOfGenerators.Proofs.TrialBoundExamples
 
-/-! Proposition A.23.2. A finite native generator executes the corrected
-optional-stopping algorithm. Both its seed budget and its actual running time
-are polynomial in the unary length index. -/
+/-!
+# Native exact-recursive generation for Proposition 6.2
+
+A finite native generator implements the optional-stopping algorithm used in
+Appendix A.21. Its seed and execution budgets are polynomial in the unary
+length index. This module takes the retained all-label, finite-trial interface;
+`Proofs.PaperExactRecursiveGeneration` constructs that interface from the
+current Definition 6.3 and proves the current Proposition 6.2.
+-/
 
 namespace ComplexityOfGenerators
 
@@ -67,8 +73,8 @@ theorem mem_pg_nonempty [Nonempty α] (G : ExactRecursiveGenerators R) : L ∈ P
     exact command_time G.base.machine G.inverse first baseSeed baseTime G.inverseSeed G.inverseTime
       count R.rankBound seed n (enough n) bits length
 
-/-- Exact recursive generation suffices; the machine construction also works
-for the degenerate empty alphabet. -/
+/-- The retained all-label, finite-trial exact-recursive interface yields
+a native polynomial generator, including for the empty alphabet. -/
 theorem mem_pg (G : ExactRecursiveGenerators R) : L ∈ PG α := by
   classical
   cases isEmpty_or_nonempty α with
@@ -91,9 +97,10 @@ theorem mem_pg (G : ExactRecursiveGenerators R) : L ∈ PG α := by
 
 end ExactRecursiveGenerators
 
-/-- **Proposition A.23.2.** Every exactly recursively generable language is
-polynomial-time generable. The verified construction allows an optional stop
-at each length-`n` ancestor and otherwise follows positive inverse labels. -/
+/-- Native polynomial generation from the retained exact-recursive
+interface. The controller offers an optional stop at every length-`n` ancestor
+and otherwise follows positive inverse labels. The current Proposition 6.2
+is obtained through `Proofs.PaperExactRecursiveGeneration`. -/
 theorem exactlyRecursivelyGenerable_mem_pg {α : Type} [Fintype α] {L : Language α}
     (h : ExactlyRecursivelyGenerable L) : L ∈ PG α := by
   obtain ⟨R, _, ⟨G⟩⟩ := h

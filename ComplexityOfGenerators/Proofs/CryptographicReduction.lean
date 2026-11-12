@@ -5,10 +5,10 @@ import ComplexityOfGenerators.Foundations.Probability
 /-!
 # Probability and support in the collision-generator reduction
 
-This is the mathematical part of Proposition 5.2 / Theorem 5.1. The simulation
-hypothesis in `collision_generator_contradiction` is explicit: a constructor must
-still turn the generator at size `2*(n+1)+1` into a collision finder at parameter
-`n`. It is not supplied as an axiom, an instance, or an unfinished proof.
+These support and probability lemmas are used in collision non-generability,
+the separation in current Theorem 5.2. The helper
+`collision_generator_contradiction` takes an explicit verified simulation from
+a generator at size `2*(n+1)+1` to a collision finder at parameter `n`.
 -/
 
 namespace ComplexityOfGenerators
@@ -16,8 +16,8 @@ namespace ComplexityOfGenerators
 open MeasureTheory
 open scoped ENNReal
 
-/-- Exact output length determines the hash index. This also checks the corrected
-`n+1`-bit preimage convention, rather than assuming Definition 5.5's ill-typed index. -/
+/-- Exact output length determines the hash index: two `n+1`-bit preimages and
+one separator give length `2*(n+1)+1`. -/
 theorem HashFunction.collision_member_parameter (h : HashFunction) (n : ℕ)
     (w : List PairSymbol) (member : w ∈ h.collisionLanguage)
     (length : w.length = 2 * (n + 1) + 1) :

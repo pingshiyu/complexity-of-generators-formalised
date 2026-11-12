@@ -1,12 +1,13 @@
 import ComplexityOfGenerators.ComplexityClasses
 
 /-!
-# Collision resistance (Definitions 5.3–5.4)
+# Collision resistance (Definitions 5.8–5.9)
 
 The hash family is unkeyed and its attacks are uniform. A hash at security
-parameter `n` maps `n+1` bits to `n` bits. The typed lengths below follow Definition
-5.3, avoiding the inconsistent hash index in Definition 5.5's collision language.
-The main separation theorem does not depend on a chosen pair encoding.
+parameter `n` maps `n+1` bits to `n` bits, as in Definition 5.8.
+The literal collision language of Definition 5.10 uses `PairSymbol`; a proved
+native encoding bridge supplies the binary representation used internally
+in the separation proof.
 -/
 
 namespace ComplexityOfGenerators
@@ -17,7 +18,7 @@ abbrev Bits (n : ℕ) := Fin n → Bool
 
 def bitsWord {n : ℕ} (x : Bits n) : BitString := List.ofFn x
 
-/-- Definition 5.3, including one uniform polynomial-time implementation. -/
+/-- Definition 5.8, including one uniform polynomial-time implementation. -/
 structure HashFunction where
   hash : (n : ℕ) → Bits (n + 1) → Bits n
   implementation : Machine Bool Bool Bool
@@ -56,7 +57,7 @@ def collisionSuccess (h : HashFunction) (A : CollisionFinder) (n : ℕ) : Set Bi
       A.machine.Produces (generatorData n) b (encodePair x y) ∧
       h.IsCollision n x y }
 
-/-- Definition 5.4: no uniform polynomial attack has inverse-polynomial success
+/-- Definition 5.9: no uniform polynomial attack has inverse-polynomial success
 for infinitely many security parameters. `Set.Infinite` expresses that quantifier
 literally, and the probability threshold uses the paper's strict inequality. -/
 def HashFunction.CollisionResistant (h : HashFunction) : Prop :=

@@ -4,8 +4,8 @@ import ComplexityOfGenerators.Proofs.PolynomialGenerationContainment
 /-!
 # Expected polynomial-time exact generation is contained in NP
 
-The expected-time hypothesis supplies polynomially short accepting runs for
-individual words.  The existing native generator recognizer and polynomial
+The fast-path clause of `ExpectedPolynomialTime` supplies polynomially short
+accepting runs for individual words.  The existing native generator recognizer and polynomial
 clock turn those runs into bounded nondeterministic decision computations.
 -/
 

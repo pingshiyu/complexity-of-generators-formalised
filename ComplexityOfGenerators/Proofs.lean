@@ -61,9 +61,16 @@ import ComplexityOfGenerators.Proofs.OriginalSourceClosureSupport
 import ComplexityOfGenerators.Proofs.ExpectedOriginalStarSampling
 import ComplexityOfGenerators.Proofs.ELEPGStar
 import ComplexityOfGenerators.Proofs.ELEPGBinary
+import ComplexityOfGenerators.Proofs.PaperCertificateEquivalence
+import ComplexityOfGenerators.Proofs.PaperExactRecursiveGeneration
+import ComplexityOfGenerators.Proofs.PaperExactRecursiveLegacy
+import ComplexityOfGenerators.Proofs.PairCollisionDecision
+import ComplexityOfGenerators.Proofs.PairCollisionNonGenerability
+import ComplexityOfGenerators.Proofs.AlphabetIntersectionNonclosure
+import ComplexityOfGenerators.Proofs.AlphabetComplementNonclosure
 /-! Checked proof components, including the current expected-time results.
-`MainTheorems` assembles the public statements; `CURRENT_PAPER_STATUS.md` records
-which current paper claims remain unformalised. Exact recursive generation uses a
+`MainTheorems` assembles the current paper statements. The artifact guide and
+definition cross-reference record their models and interfaces. Exact recursive generation uses a
 verified finite stack program, polynomial instruction bounds, and the proved
 stack-to-native compiler. The expected-length extension proves ELEPG collision
 non-generability and infinite-intersection nonclosure using a native bounded

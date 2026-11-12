@@ -1,7 +1,7 @@
 import ComplexityOfGenerators.Proofs.ElementaryGenerators
 
 /-!
-# A boundary problem in the former equal-budget Remark 1 convention
+# A boundary problem in the historical equal-budget trial interface
 
 Consuming a tape of length `t` requires `t` random-read transitions. A single
 silent initialization transition therefore makes exhaustion within `t` steps

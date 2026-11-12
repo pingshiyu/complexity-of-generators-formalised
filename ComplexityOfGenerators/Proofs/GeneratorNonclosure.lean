@@ -4,7 +4,7 @@ import ComplexityOfGenerators.Proofs.ClosureArguments
 import ComplexityOfGenerators.Proofs.PolynomialCollisionDecision
 
 /-!
-# The two independent nonclosure statements of Theorem 7.2
+# Binary specialisations of the nonclosure statements in current Theorem 6.1
 
 For every native NP language L, both L ∪ 0⁺ and L ∪ 1⁺ belong to native PG.
 Their intersection is L. Complement closure of PG would consequently put

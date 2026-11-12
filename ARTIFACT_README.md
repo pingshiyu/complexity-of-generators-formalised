@@ -1,7 +1,7 @@
 # Artifact guide: Lean formalisation of generator complexity
 
-This artifact accompanies the PLDI27 paper on the complexity of randomised
-testing. It is a Lean 4 library formalising generators as finite-control
+This artifact accompanies the current PLDI27 [paper](paper.pdf) on the
+complexity of randomised testing. It is a Lean 4 library formalising generators as finite-control
 machines, their probability semantics, and the relationship between generation
 and decision complexity. It includes concrete machine constructions for SAT
 and HAMPATH, expected-time containment and separation results, and closure and
@@ -71,7 +71,9 @@ python3 scripts/audit-all.py
 ```
 
 The first command imports the current-paper API directly and prints the types
-of its principal results and native construction witnesses. It also prints
+of its principal results and native construction witnesses. It checks the
+current certificate, bounded-label, literal collision-language and general-
+alphabet theorem types explicitly. It also prints
 axiom dependencies for selected results. The second audits every local
 declaration in the public import closure. The Python script extends that audit
 to **every local Lean source module**, including modules outside that closure.
@@ -134,13 +136,13 @@ points; all names are in the namespace `ComplexityOfGenerators`.
 | Collision-language membership in P | `observation_collision_language_polynomial_decision` |
 | Theorem 5.2: collision non-generability | `theorem_5_2_collision_non_generability`; the stronger `theorem_5_2_raw_expected_length_collision_non_generability` removes the fast-path condition |
 | Collision exclusions for PG and EPG | `corollary_5_2_collision_non_generability` |
-| Proposition 6.2: exact-recursive generation implies PG | `proposition_6_2_exact_recursive_generation`, under the native inverse interface described below |
+| Proposition 6.1: certificate schemes characterise PG | `proposition_6_1_generators_are_certificate_schemes` |
+| Proposition 6.2: exact-recursive generation implies PG | `proposition_6_2_exact_recursive_generation` |
 | SAT and HAMPATH constructions | `example_sat_polynomial_self_reduction`, `example_sat_exact_recursive_generation`, and their `example_hampath_*` counterparts; PG membership is also exposed |
 | Proposition 6.3: union, concatenation and Kleene star | Nine `proposition_6_3_*` declarations, one for each operation and each of PG, EPG and ELEPG |
 | Theorem 6.1: complement and intersection nonclosure | `theorem_6_1_complement_nonclosure`, `theorem_6_1_infinite_intersection_nonclosure` |
 
-[CURRENT_PAPER_STATUS.md](CURRENT_PAPER_STATUS.md) gives the detailed coverage
-and [DEFINITION_CROSS_REFERENCE.md](DEFINITION_CROSS_REFERENCE.md) explains the
+[DEFINITION_CROSS_REFERENCE.md](DEFINITION_CROSS_REFERENCE.md) explains the
 formal definitions and model conventions. Important points for interpreting the
 table are:
 
@@ -156,22 +158,27 @@ table are:
   Current ELEPG uses global word-length fast paths; the separate
   `LayerFastELEPG` definition retains the historical per-layer requirements.
 - The stronger raw Theorem 5.2 assumes neither fast paths nor polynomial
-  producing-index coverage. Its collision language uses an injective binary
-  encoding of the paper's collision pairs.
+  producing-index coverage. Its statement uses the literal separated-pair
+  language over `PairSymbol`, as does the polynomial-decision observation. A
+  proved native encoding bridge is used internally in the attacker argument.
 - SAT uses a concrete padded-CNF encoding. HAMPATH uses loop-free directed
   adjacency matrices: self-loops are excluded, while longer cycles are allowed.
-  The generic exact-recursive theorem currently requires inverse generators
-  for all labels, a stronger interface than the paper's bounded-label one.
-  The native SAT/HAMPATH constructions meet that interface. Further encoding
+  The current exact-recursive theorem assumes inverse generators only on the
+  paper's bounded labels, with accepting-run bounds. Native bounded simulation,
+  a width/length postfilter and a general runtime-normalization construction
+  derive the internal finite-trial interface. Further encoding
   conventions, including SAT's rank on malformed words, are documented in the
   definition cross-reference.
 
-The table describes the checked part of the current paper. In particular, the
-certificate-scheme equivalence is retained under historical positive binary
-certificate conventions; its bridge to the current empty-certificate/alphabet
-interface remains documented work. Older theorem numbers and aliases live in
+The certificate-scheme equivalence uses certificates in the instance alphabet,
+including the empty word, and quantifies over every certificate. It holds for
+every finite alphabet. The nonclosure results use the paper's convention of an
+alphabet with at least two symbols (`[Nontrivial α]`). Older positive-binary
+certificate and finite-trial interfaces remain available as historical APIs.
+Older theorem numbers and aliases live in
 [HistoricalTheorems.lean](ComplexityOfGenerators/HistoricalTheorems.lean).
-The bundled older PDF uses that historical numbering.
+Those aliases explicitly use the numbering of an earlier manuscript;
+`paper.pdf` is the current paper.
 
 ## 4. Finding and inspecting the proofs
 

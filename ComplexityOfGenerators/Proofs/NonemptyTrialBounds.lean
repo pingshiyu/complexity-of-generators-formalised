@@ -4,8 +4,8 @@ import ComplexityOfGenerators.Foundations.ExecutionBounds
 /-!
 # Ordinary time bounds on nonempty generator slices
 
-The collision reduction uses only nonempty slices. On such slices the Remark 1
-trial bound implies a time bound on every finite random tape, including tapes
+The collision reduction uses only nonempty slices. On such slices the internal
+finite-trial bound implies a time bound on every finite random tape, including tapes
 longer than the trial budget. No artificial clock or restriction of the
 attacker's random tapes is needed for this part of the reduction.
 -/

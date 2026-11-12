@@ -2,7 +2,7 @@ import ComplexityOfGenerators.Simulation.CompositionMemory
 import ComplexityOfGenerators.Simulation.TransducerBank.Space
 
 /-!
-# The cyclic enumeration program of Appendix A.17
+# Cyclic enumeration for the historical polynomial-space generation construction
 
 Two virtual tapes hold the current word and the simulated decider's work.
 The word is a little-endian counter over the finite alphabet. Only its current

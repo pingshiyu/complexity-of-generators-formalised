@@ -5,7 +5,7 @@ import ComplexityOfGenerators.Foundations.TrialBounds
 # Full native trials of the exact-recursive components
 
 The inverse calls in the bounded walk must test empty fibres without losing
-support. The existing full-budget witness theorem and Remark 1 emptiness test
+support. The internal full-budget witness theorem and finite-trial emptiness test
 provide precisely these contracts. No new probability or simulation axiom is
 needed for an individual call.
 -/

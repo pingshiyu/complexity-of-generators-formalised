@@ -1,8 +1,13 @@
 import ComplexityOfGenerators.Simulation.TranscriptReplaySteps
 
-/-! The native replay machine executes every accepting source transcript.
-The certificate begins with one padding bit; the remaining bits correspond to
-source instructions, with no uncharged initialization or execution steps. -/
+/-!
+# Native replay of accepting source transcripts
+
+The certificate begins with a padding bit, and the remaining bits correspond
+to source instructions. Initialization and execution steps are charged.
+These binary transcript lemmas support the retained certificate interface and
+the current Proposition 6.1 via `Proofs.PaperCertificateEquivalence`.
+-/
 
 namespace ComplexityOfGenerators.Simulation
 
@@ -57,9 +62,9 @@ theorem transcriptReplay_accepts_trace (input : List I) (n : ℕ) (log : BitStri
   rw [← Machine.runFrom_initial, (transcriptReplay M).runFrom_shift _ bits _ _ live next log.length]
   exact continuation
 
-/-- A source output accepted within `t` steps has a positive replay certificate
-of length at most `t+1`. This is the completeness and size bound needed for
-the forward certificate construction in Theorem 7.1. -/
+/-- An output accepted within `t` source steps has a positive binary
+replay certificate of length at most `t+1`. The bound supports the current
+Proposition 6.1 through `Proofs.PaperCertificateEquivalence`. -/
 theorem transcriptReplay_complete (input : List I) (n : ℕ) (bits : BitString) (t : ℕ) (out : List O)
     (accepted : M.run (transcriptSourceData input n) bits t = .halted (.accepted out)) :
     ∃ certificate : BitString, certificate ≠ [] ∧ certificate.length ≤ t + 1 ∧

@@ -4,9 +4,10 @@ import Mathlib.Data.List.GetD
 /-!
 # Almost-sure selection during cyclic enumeration
 
-Appendix A.17 repeatedly enumerates accepted words, offering each one with
-probability one half. At the level of accepted candidates, a true random bit
-continues to the next candidate and a false bit selects the current one.
+The historical polynomial-space generation construction repeatedly enumerates
+accepted words, offering each one with probability one half. At the level of
+accepted candidates, a true random bit continues to the next candidate and a
+false bit selects the current one.
 
 This module proves the support and probability facts for that protocol. The
 list of accepted candidates is a semantic specification, not a proposed work-

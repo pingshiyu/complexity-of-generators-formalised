@@ -104,3 +104,37 @@ open ComplexityOfGenerators
 #check example_hampath_polynomial_self_reduction
 #check example_hampath_exact_recursive_generation
 #check example_hampath_polynomial_generation
+
+#check proposition_6_1_generators_are_certificate_schemes
+#print axioms proposition_6_1_generators_are_certificate_schemes
+#print axioms proposition_6_2_exact_recursive_generation
+#print axioms theorem_5_2_collision_non_generability
+#print axioms observation_collision_language_polynomial_decision
+#check Simulation.RandomMeter.polynomial_trialBound_of_accepting
+
+/-! These type checks guard the paper-facing interfaces, beyond checking names. -/
+example {α : Type} [Fintype α] (L : Language α) :
+    L ∈ PG α ↔ ∃ V : PaperCertificates.PolynomialVerifier L,
+      PaperCertificates.HasCertificateScheme V :=
+  proposition_6_1_generators_are_certificate_schemes L
+
+example {α : Type} [Fintype α] {L : Language α}
+    (generable : PaperExactlyRecursivelyGenerable L) : L ∈ PG α :=
+  proposition_6_2_exact_recursive_generation generable
+
+example (h : HashFunction) (secure : h.CollisionResistant) :
+    h.collisionLanguage ∉ ExpectedLengthExpectedPolynomialTime PairSymbol :=
+  theorem_5_2_raw_expected_length_collision_non_generability h secure
+
+example (h : HashFunction) : h.collisionLanguage ∈ P PairSymbol :=
+  observation_collision_language_polynomial_decision h
+
+example {α : Type} [Fintype α] [Nontrivial α] (different : NP α ≠ coNP α) :
+    ¬ ClosedUnderComplement (PG α) ∧ ¬ ClosedUnderComplement (EPG α) ∧
+      ¬ ClosedUnderComplement (ELEPG α) :=
+  theorem_6_1_complement_nonclosure different
+
+example {α : Type} [Fintype α] [Nontrivial α] (hashes : CollisionResistantHashFunctionsExist) :
+    ∃ A B : Language α, A ∈ ELEPG α ∧ B ∈ ELEPG α ∧
+      (A ∩ B).Infinite ∧ A ∩ B ∉ ELEPG α :=
+  (theorem_6_1_infinite_intersection_nonclosure hashes).2.2

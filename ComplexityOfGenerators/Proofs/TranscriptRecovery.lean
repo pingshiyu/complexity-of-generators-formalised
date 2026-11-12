@@ -75,7 +75,7 @@ theorem transcriptRecoverer_union (G : GeneratorFamily α) (n : ℕ) :
     exact transcriptRecoverer_language_subset G n c recovered
   · exact transcriptRecoverer_complete G n word
 
-/-- The existing Remark 1 budgets give a polynomial-size certificate for
+/-- The internal finite-trial budgets give a polynomial-size certificate for
 every source word; no lower bound on its sampling probability is needed. -/
 theorem transcriptRecoverer_bounded_complete (G : GeneratorFamily α) (seed time : PolynomialBound)
     (bound : G.toUniformGenerators.RunsInTime seed time) (n : ℕ) (word : Word α)

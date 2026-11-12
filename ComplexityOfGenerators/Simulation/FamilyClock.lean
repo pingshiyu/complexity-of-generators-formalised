@@ -45,7 +45,7 @@ theorem familyClock_produces_iff (n : ℕ) (bits : BitString) (word : List O) :
   | halted result => simp [unarySwapResult]
 
 /-- Clocking preserves every source output on its original random tape when
-the source has a Remark 1 bound. Empty slices remain empty. -/
+the source has an internal finite-trial bound. Empty slices remain empty. -/
 theorem familyClock_preserves (n seed : ℕ)
     (bound : M.GeneratorTimeBound (generatorData n) seed (p n))
     (bits : BitString) (word : List O) :
